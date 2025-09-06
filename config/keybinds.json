@@ -1,0 +1,7 @@
+{
+    "quit": "q",
+    "help": "h",
+    "move_up": "k",
+    "move_down": "j",
+    "select": "enter"
+}

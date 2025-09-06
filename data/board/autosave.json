@@ -1,0 +1,45 @@
+{
+    "id": 1,
+    "name": "Project Alpha",
+    "todo": {
+        "1": {
+            "id": 1,
+            "name": "Setup Project",
+            "description": "Initialize repository and create project structure"
+        },
+        "2": {
+            "id": 2,
+            "name": "Design Database Schema",
+            "description": "Plan tables and relationships for core features"
+        },
+        "3": {
+            "id": 3,
+            "name": "Write Documentation",
+            "description": "Add README with setup instructions"
+        }
+    },
+    "inProgress": {
+        "4": {
+            "id": 4,
+            "name": "Implement Login",
+            "description": "Develop authentication system using JWT"
+        },
+        "5": {
+            "id": 5,
+            "name": "Frontend Layout",
+            "description": "Create base HTML\/CSS for Kanban interface"
+        }
+    },
+    "done": {
+        "6": {
+            "id": 6,
+            "name": "Create Git Repository",
+            "description": "Initialize repo and push initial commit"
+        },
+        "7": {
+            "id": 7,
+            "name": "Setup CI\/CD",
+            "description": "Configure GitHub Actions for tests and deployments"
+        }
+    }
+}

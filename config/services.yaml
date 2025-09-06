@@ -1,0 +1,40 @@
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+
+    Lpuygrenier\Lazykanban\Service\FileService:
+        public: true
+
+    Lpuygrenier\Lazykanban\Service\ConfigService:
+        public: true
+        arguments:
+            $configFilePath: '%config_file_path%'
+
+    Lpuygrenier\Lazykanban\Service\KeybindService:
+        public: true
+        arguments:
+            $keybindFilePath: '%keybind_file_path%'
+
+    Lpuygrenier\Lazykanban\Engine\Engine:
+        public: true
+
+    Monolog\Logger:
+        public: true
+        arguments:
+            $name: 'app'
+        calls:
+            - method: pushHandler
+              arguments:
+                  - '@Monolog\Handler\StreamHandler'
+
+    Monolog\Handler\StreamHandler:
+        public: true
+        arguments:
+            $stream: '%log_file_path%'
+            $level: !php/const Monolog\Logger::DEBUG
+
+parameters:
+    config_file_path: '%env(CONFIG_FILE_PATH)%'
+    keybind_file_path: '%env(KEYBIND_FILE_PATH)%'
+    log_file_path: 'logs/lazykanban.log'
