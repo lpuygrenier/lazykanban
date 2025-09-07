@@ -87,6 +87,9 @@ final class KanbanPage implements GuiComponent
             case 'move_task':
                 $this->moveSelectedTask();
                 break;
+            case 'delete_task':
+                $this->deleteSelectedTask();
+                break;
         }
     }
 
@@ -104,8 +107,8 @@ final class KanbanPage implements GuiComponent
                             ->highlightSymbol('X')
                             ->highlightStyle(Style::default()->black()->onCyan())
                             ->widths(
-                                Constraint::percentage(percentage: 30),
-                                Constraint::percentage(percentage: 40),
+                                Constraint::percentage(percentage: 10),
+                                Constraint::percentage(percentage: 50),
                                 Constraint::percentage(percentage: 30),
                             )
                             ->header(
@@ -196,6 +199,25 @@ final class KanbanPage implements GuiComponent
                 'DONE' => Status::TODO,
             };
             $this->board->move($task, $nextStatus);
+        }
+    }
+
+    private function deleteSelectedTask(): void
+    {
+        $allTasks = array_merge(
+            array_map(fn($task) => ['task' => $task, 'status' => 'TODO'], $this->board->todo),
+            array_map(fn($task) => ['task' => $task, 'status' => 'IN_PROGRESS'], $this->board->inProgress),
+            array_map(fn($task) => ['task' => $task, 'status' => 'DONE'], $this->board->done)
+        );
+
+        if (isset($allTasks[$this->state->selected])) {
+            $task = $allTasks[$this->state->selected]['task'];
+            $this->board->remove($task);
+            // Adjust selection if necessary
+            $totalTasks = count($this->board->todo) + count($this->board->inProgress) + count($this->board->done);
+            if ($this->state->selected >= $totalTasks) {
+                $this->state->selected = max(0, $totalTasks - 1);
+            }
         }
     }
 }
