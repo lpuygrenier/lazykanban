@@ -1,7 +1,7 @@
 <?php
 namespace Lpuygrenier\Lazykanban\Engine;
 
-use Lpuygrenier\Lazykanban\Gui\Element\Input;
+use Lpuygrenier\Lazykanban\Gui\Component\Input;
 use Lpuygrenier\Lazykanban\Gui\GuiComponent;
 use Lpuygrenier\Lazykanban\Gui\KeyboardAction;
 use Lpuygrenier\Lazykanban\Service\FileService;
@@ -65,7 +65,8 @@ class Engine {
             ->addExtension(new BdfExtension())
             ->build();
 
-        $this->currentGuiComponent = new KanbanPage($this->board);
+        // $this->currentGuiComponent = new KanbanPage($this->board);
+        $this->currentGuiComponent = new Input($this->logger);
     }
 
     public function run(): int {
@@ -100,13 +101,16 @@ class Engine {
                             $this->logger->info('Quit key pressed, exiting application');
                             break 2;
                         }
-
-                        $keyboardAction = $this->keybindService->getActionForKey($event->char, $event);
-                        if ($keyboardAction->hasAction()) {
-                            $this->currentGuiComponent->handleKeybindAction($keyboardAction);
-                        }
                     }
+                    $keyboardAction = $this->keybindService->getActionForKey($event->char, $event);
+                    $this->currentGuiComponent->handleKeybindAction($keyboardAction);
+                } else if ($event instanceof CodedKeyEvent) {
+                    $keyboardAction = $this->keybindService->getActionForKey("", $event);
+                    $this->currentGuiComponent->handleKeybindAction($keyboardAction);
                 }
+
+                
+
             }
 
             $this->display->draw($this->buildLayout($this->currentGuiComponent));
