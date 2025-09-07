@@ -42,6 +42,7 @@ class KeybindService {
             'move_up' => 'k',
             'move_down' => 'j',
             'select' => 'enter',
+            'move_task' => 'm',
         ];
         $this->logger->info('[KeybindService] - Using default keybinds');
     }

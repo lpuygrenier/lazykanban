@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Lpuygrenier\Lazykanban\Gui\Page;
 
 use Lpuygrenier\Lazykanban\Entity\Board;
+use Lpuygrenier\Lazykanban\Entity\Status;
+use Lpuygrenier\Lazykanban\Entity\Task;
 use Monolog\Logger;
 use PhpTui\Term\Event;
 use PhpTui\Term\KeyCode;
@@ -32,6 +34,11 @@ final class KanbanPage implements GuiComponent
 
     private TableState $state;
     private Board $board;
+    private bool $showPopup = false;
+    private string $editingField = 'name';
+    private ?Task $editingTask = null;
+    private string $nameValue = '';
+    private string $descriptionValue = '';
 
     public function __construct(Board $board)
     {
@@ -77,10 +84,13 @@ final class KanbanPage implements GuiComponent
                     $this->state->selected = $this->state->selected + 1;
                 }
                 break;
+            case 'move_task':
+                $this->moveSelectedTask();
+                break;
         }
     }
 
-    public function taskTable(): TableWidget
+    private function taskTable(): TableWidget
     {
         // Get all tasks from the board
         $allTasks = array_merge(
@@ -115,12 +125,8 @@ final class KanbanPage implements GuiComponent
                                 );
                             }, $allTasks));
     }
-    public function dummyRow(): TableRow
-    {
-        return TableRow::fromStrings("dummy Row");
-    }
 
-    public function kanbanBoard(): Widget {
+    private function kanbanBoard(): Widget {
         return GridWidget::default()
             ->direction(Direction::Horizontal)
             ->constraints(
@@ -134,7 +140,7 @@ final class KanbanPage implements GuiComponent
                 $this->taskColumn('DONE', $this->board->done)
             );
     }
-    public function taskColumn(string $title, array $tasks): Widget
+    private function taskColumn(string $title, array $tasks): Widget
     {
         $taskWidgets = array_map(fn($task) => $this->taskCard($task), $tasks);
 
@@ -156,7 +162,7 @@ final class KanbanPage implements GuiComponent
             ->widget($columnContent);
     }
 
-    public function taskCard($task): Widget
+    private function taskCard($task): Widget
     {
         $content = sprintf(
             "%d. %s",
@@ -173,18 +179,23 @@ final class KanbanPage implements GuiComponent
             );
     }
 
-    /**
-     * @param int-mask-of<Borders::*> $borders
-     */
-    public function borders(Widget $paragraph, int $borders, bool $title = true): Widget
+    private function moveSelectedTask(): void
     {
-        return BlockWidget::default()
-            ->borders($borders)
-            ->titles($title ?
-                Title::fromString(sprintf('Borders::%s', Borders::toString($borders)))
-                : Title::fromString(''))
-            ->widget($paragraph)
-            ;
-    }
+        $allTasks = array_merge(
+            array_map(fn($task) => ['task' => $task, 'status' => 'TODO'], $this->board->todo),
+            array_map(fn($task) => ['task' => $task, 'status' => 'IN_PROGRESS'], $this->board->inProgress),
+            array_map(fn($task) => ['task' => $task, 'status' => 'DONE'], $this->board->done)
+        );
 
+        if (isset($allTasks[$this->state->selected])) {
+            $task = $allTasks[$this->state->selected]['task'];
+            $status = $allTasks[$this->state->selected]['status'];
+            $nextStatus = match ($status) {
+                'TODO' => Status::IN_PROGRESS,
+                'IN_PROGRESS' => Status::DONE,
+                'DONE' => Status::TODO,
+            };
+            $this->board->move($task, $nextStatus);
+        }
+    }
 }
