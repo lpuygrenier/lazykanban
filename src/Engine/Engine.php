@@ -1,7 +1,9 @@
 <?php
 namespace Lpuygrenier\Lazykanban\Engine;
 
+use Lpuygrenier\Lazykanban\Gui\Element\Input;
 use Lpuygrenier\Lazykanban\Gui\GuiComponent;
+use Lpuygrenier\Lazykanban\Gui\KeyboardAction;
 use Lpuygrenier\Lazykanban\Service\FileService;
 use Lpuygrenier\Lazykanban\Service\ConfigService;
 use Lpuygrenier\Lazykanban\Service\KeybindService;
@@ -99,9 +101,9 @@ class Engine {
                             break 2;
                         }
 
-                        $action = $this->keybindService->getActionForKey($event->char);
-                        if ($action) {
-                            $this->currentGuiComponent->handleKeybindAction($action);
+                        $keyboardAction = $this->keybindService->getActionForKey($event->char, $event);
+                        if ($keyboardAction->hasAction()) {
+                            $this->currentGuiComponent->handleKeybindAction($keyboardAction);
                         }
                     }
                 }

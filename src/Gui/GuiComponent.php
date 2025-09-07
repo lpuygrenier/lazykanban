@@ -11,5 +11,5 @@ interface GuiComponent
 {
     public function build(): Widget;
 
-    public function handleKeybindAction(string $action): void;
+    public function handleKeybindAction(KeyboardAction $keyboardAction): void;
 }

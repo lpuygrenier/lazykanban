@@ -7,6 +7,7 @@ namespace Lpuygrenier\Lazykanban\Gui\Page;
 use Lpuygrenier\Lazykanban\Entity\Board;
 use Lpuygrenier\Lazykanban\Entity\Status;
 use Lpuygrenier\Lazykanban\Entity\Task;
+use Lpuygrenier\Lazykanban\Gui\KeyboardAction;
 use Monolog\Logger;
 use PhpTui\Term\Event;
 use PhpTui\Term\KeyCode;
@@ -71,7 +72,12 @@ final class KanbanPage implements GuiComponent
     }
 
 
-    public function handleKeybindAction(string $action): void {
+    public function handleKeybindAction(KeyboardAction $keyboardAction): void {
+        $action = $keyboardAction->getAction();
+        if ($action === null) {
+            return;
+        }
+
         $totalTasks = count($this->board->todo) + count($this->board->inProgress) + count($this->board->done);
         switch ($action) {
             case 'move_up':

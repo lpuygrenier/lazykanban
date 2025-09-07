@@ -3,6 +3,8 @@
 namespace Lpuygrenier\Lazykanban\Service;
 
 use Monolog\Logger;
+use Lpuygrenier\Lazykanban\Gui\KeyboardAction;
+use PhpTui\Term\Event;
 
 class KeybindService {
     private array $keybinds = [];
@@ -61,12 +63,12 @@ class KeybindService {
         return $actionKey !== null && $pressedKey === $actionKey;
     }
 
-    public function getActionForKey(string $pressedKey): ?string {
+    public function getActionForKey(string $pressedKey, ?Event $event = null): KeyboardAction {
         foreach ($this->keybinds as $action => $key) {
             if ($key === $pressedKey) {
-                return $action;
+                return new KeyboardAction($action, $event);
             }
         }
-        return null;
+        return new KeyboardAction(null, $event);
     }
 }
