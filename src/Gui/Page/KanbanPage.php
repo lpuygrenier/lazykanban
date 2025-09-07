@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Lpuygrenier\Lazykanban\Gui\Page;
 
+use Lpuygrenier\Lazykanban\Entity\Board;
+use Monolog\Logger;
 use PhpTui\Term\Event;
 use PhpTui\Term\KeyCode;
 use Lpuygrenier\Lazykanban\Gui\GuiComponent;
@@ -28,18 +30,13 @@ use PhpTui\Tui\Widget\Widget;
 final class KanbanPage implements GuiComponent
 {
 
-    private int $selected = 0;
-
     private TableState $state;
-    public const EVENTS = [
-        ['Event1', 'INFO'],
-        ['Event2', 'INFO'],
-    ];
+    private Board $board;
 
-
-    public function __construct()
+    public function __construct(Board $board)
     {
-        $this->state = new TableState();
+        $this->state = new TableState(selected: 0);
+        $this->board = $board;
     }
 
 
@@ -52,18 +49,14 @@ final class KanbanPage implements GuiComponent
                 Constraint::percentage(75),
             )
             ->widgets(
-                GridWidget::default()
-                    ->direction(Direction::Vertical)
-                    ->constraints(...array_map(fn () => Constraint::percentage(100), array_fill(0, 9, true)))
-                    ->widgets(
-                        $this->borders($this->dummyTable(), Borders::ALL)
-                    ),
-                GridWidget::default()
-                    ->direction(Direction::Vertical)
-                    ->constraints(...array_map(fn () => Constraint::percentage(100), array_fill(0, 9, true)))
-                    ->widgets(
-                        $this->borders($this->dummyBoard(), Borders::ALL)
-                    ),
+                // Left panel - Task list
+                BlockWidget::default()
+                    ->borders(Borders::ALL)
+                    ->titles(Title::fromString('Tasks'))
+                    ->widget($this->taskTable()),
+
+                // Right panel - Kanban board
+                $this->kanbanBoard()
             )
         ;
 
@@ -72,50 +65,62 @@ final class KanbanPage implements GuiComponent
 
 
     public function handleKeybindAction(string $action): void {
+        $totalTasks = count($this->board->todo) + count($this->board->inProgress) + count($this->board->done);
         switch ($action) {
             case 'move_up':
-                if ($this->selected > 0) {
-                    $this->selected--;
+                if ($this->state->selected > 0) {
+                    $this->state->selected = $this->state->selected - 1;
                 }
                 break;
             case 'move_down':
-                $this->selected++;
+                if ($this->state->selected < $totalTasks - 1) {
+                    $this->state->selected = $this->state->selected + 1;
+                }
                 break;
         }
     }
 
-    public function dummyTable(): TableWidget
+    public function taskTable(): TableWidget
     {
+        // Get all tasks from the board
+        $allTasks = array_merge(
+            array_map(fn($task) => ['task' => $task, 'status' => 'TODO'], $this->board->todo),
+            array_map(fn($task) => ['task' => $task, 'status' => 'IN_PROGRESS'], $this->board->inProgress),
+            array_map(fn($task) => ['task' => $task, 'status' => 'DONE'], $this->board->done)
+        );
+
         return TableWidget::default()
                             ->state($this->state)
-                            ->select($this->selected)
                             ->highlightSymbol('X')
                             ->highlightStyle(Style::default()->black()->onCyan())
                             ->widths(
-                                Constraint::percentage(percentage: 50),
-                                Constraint::percentage(percentage: 50),
+                                Constraint::percentage(percentage: 30),
+                                Constraint::percentage(percentage: 40),
+                                Constraint::percentage(percentage: 30),
                             )
                             ->header(
                                 TableRow::fromCells(
-                                    TableCell::fromString('Level'),
-                                    TableCell::fromString('Event'),
+                                    TableCell::fromString('ID'),
+                                    TableCell::fromString('Task'),
+                                    TableCell::fromString('Status'),
                                 )
                             )
-                            ->rows(...array_map(function (array $event) {
+                            ->rows(...array_map(function (array $taskData) {
+                                $task = $taskData['task'];
+                                $status = $taskData['status'];
                                 return TableRow::fromCells(
-                                    TableCell::fromLine(Line::fromSpan(
-                                        Span::fromString($event[1]),
-                                    )),
-                                    TableCell::fromLine(Line::fromString($event[0]))
+                                    TableCell::fromString((string)$task->getId()),
+                                    TableCell::fromString($task->getName()),
+                                    TableCell::fromString($status)
                                 );
-                            }, array_merge(self::EVENTS, self::EVENTS)));
+                            }, $allTasks));
     }
     public function dummyRow(): TableRow
     {
         return TableRow::fromStrings("dummy Row");
     }
 
-    public function dummyBoard() {
+    public function kanbanBoard(): Widget {
         return GridWidget::default()
             ->direction(Direction::Horizontal)
             ->constraints(
@@ -123,24 +128,49 @@ final class KanbanPage implements GuiComponent
                 Constraint::percentage(33),
                 Constraint::percentage(33),
             )
-            ->widgets($this->dummyBoardList(), $this->dummyBoardList(), $this->dummyBoardList());
+            ->widgets(
+                $this->taskColumn('TODO', $this->board->todo),
+                $this->taskColumn('IN PROGRESS', $this->board->inProgress),
+                $this->taskColumn('DONE', $this->board->done)
+            );
     }
-    public function dummyBoardList(): Widget
+    public function taskColumn(string $title, array $tasks): Widget
     {
-        return $this->borders($this->dummyCard(), Borders::ALL);
+        $taskWidgets = array_map(fn($task) => $this->taskCard($task), $tasks);
+
+        // If no tasks, show empty message
+        if (empty($taskWidgets)) {
+            $taskWidgets[] = ParagraphWidget::fromText(
+                Text::parse('<fg=darkgray>No tasks</>')
+            );
+        }
+
+        $columnContent = GridWidget::default()
+            ->direction(Direction::Vertical)
+            ->constraints(...array_map(fn() => Constraint::length(3), $taskWidgets))
+            ->widgets(...$taskWidgets);
+
+        return BlockWidget::default()
+            ->borders(Borders::ALL)
+            ->titles(Title::fromString($title))
+            ->widget($columnContent);
     }
 
-    public function dummyCard(): Widget
+    public function taskCard($task): Widget
     {
-        return $this->borders($this->lorem(), Borders::ALL, false);
-    }
-    public function lorem(): ParagraphWidget
-    {
-        $text = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.';
+        $content = sprintf(
+            "%d. %s",
+            $task->getId(),
+            $task->getName()
+        );
 
-        return ParagraphWidget::fromText(
-            Text::parse(sprintf('<fg=darkgray>%s</>', $text))
-        )->wrap(Wrap::Word);
+        return BlockWidget::default()
+            ->borders(Borders::ALL)
+            ->widget(
+                ParagraphWidget::fromText(
+                    Text::parse($content)
+                )->wrap(Wrap::Word)
+            );
     }
 
     /**

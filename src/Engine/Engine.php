@@ -63,7 +63,7 @@ class Engine {
             ->addExtension(new BdfExtension())
             ->build();
 
-        $this->currentGuiComponent = new KanbanPage();
+        $this->currentGuiComponent = new KanbanPage($this->board);
     }
 
     public function run(): int {
@@ -108,6 +108,10 @@ class Engine {
             }
 
             $this->display->draw($this->buildLayout($this->currentGuiComponent));
+            
+            // sleep for Xms - note that it's encouraged to implement apps
+            // using an async library such as Amp or React
+            usleep(50_000);
         }
 
         $this->terminal->disableRawMode();

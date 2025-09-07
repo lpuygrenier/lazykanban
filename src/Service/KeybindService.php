@@ -39,11 +39,9 @@ class KeybindService {
         $this->keybinds = [
             'quit' => 'q',
             'help' => 'h',
-            'save' => 's',
-            'load' => 'l',
-            'new_task' => 'n',
-            'edit_task' => 'e',
-            'delete_task' => 'd'
+            'move_up' => 'k',
+            'move_down' => 'j',
+            'select' => 'enter',
         ];
         $this->logger->info('[KeybindService] - Using default keybinds');
     }
