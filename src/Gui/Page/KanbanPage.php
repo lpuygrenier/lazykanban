@@ -41,6 +41,17 @@ final class KanbanPage implements GuiComponent
         $this->boardComponent->setActive($this->activeComponent === 'board');
         $this->boardSectionComponent->setActive($this->activeComponent === 'boardsection');
 
+        $sideContent = GridWidget::default()
+            ->direction(Direction::Vertical)
+            ->constraints(
+                Constraint::percentage(75),
+                Constraint::percentage(25),
+            )
+            ->widgets(
+                $this->taskComponent->build(),
+                $this->boardSectionComponent->build()
+            );
+        
         $mainContent = GridWidget::default()
             ->direction(Direction::Horizontal)
             ->constraints(
@@ -48,20 +59,11 @@ final class KanbanPage implements GuiComponent
                 Constraint::percentage(75),
             )
             ->widgets(
-                $this->taskComponent->build(),
+                $sideContent,
                 $this->boardComponent->build()
             );
-
-        return GridWidget::default()
-            ->direction(Direction::Vertical)
-            ->constraints(
-                Constraint::percentage(75),
-                Constraint::percentage(25),
-            )
-            ->widgets(
-                $mainContent,
-                $this->boardSectionComponent->build()
-            );
+        
+        return $mainContent;
     }
 
 
@@ -94,78 +96,4 @@ final class KanbanPage implements GuiComponent
                 break;
         }
     }
-
-    private function taskColumn(string $title, array $tasks): Widget
-    {
-        $taskWidgets = array_map(fn($task) => $this->taskCard($task), $tasks);
-
-        // If no tasks, show empty message
-        if (empty($taskWidgets)) {
-            $taskWidgets[] = ParagraphWidget::fromText(
-                Text::parse('<fg=darkgray>No tasks</>')
-            );
-        }
-
-        $columnContent = GridWidget::default()
-            ->direction(Direction::Vertical)
-            ->constraints(...array_map(fn() => Constraint::length(3), $taskWidgets))
-            ->widgets(...$taskWidgets);
-
-        return BlockWidget::default()
-            ->borders(Borders::ALL)
-            ->titles(Title::fromString($title))
-            ->widget($columnContent);
-    }
-
-    private function boardSection(): Widget
-    {
-        if (empty($this->boardFiles)) {
-            return BlockWidget::default()
-                ->borders(Borders::ALL)
-                ->titles(Title::fromString('Boards'))
-                ->widget(
-                    ParagraphWidget::fromText(
-                        Text::parse('<fg=darkgray>No board files found</>')
-                    )
-                );
-        }
-
-        $boardRows = array_map(function ($file) {
-            return TableRow::fromCells(
-                TableCell::fromString($file)
-            );
-        }, $this->boardFiles);
-
-        $boardState = new TableState(selected: $this->boardSelected);
-
-        return BlockWidget::default()
-            ->borders(Borders::ALL)
-            ->titles(Title::fromString('Boards'))
-            ->widget(
-                TableWidget::default()
-                    ->state($boardState)
-                    ->highlightSymbol('>')
-                    ->highlightStyle(Style::default()->fg(Colors::BLACK)->bg(Colors::CYAN))
-                    ->widths(Constraint::percentage(100))
-                    ->rows(...$boardRows)
-            );
-    }
-
-    private function taskCard($task): Widget
-    {
-        $content = sprintf(
-            "%d. %s",
-            $task->getId(),
-            $task->getName()
-        );
-
-        return BlockWidget::default()
-            ->borders(Borders::ALL)
-            ->widget(
-                ParagraphWidget::fromText(
-                    Text::parse($content)
-                )->wrap(Wrap::Word)
-            );
-    }
-
 }
