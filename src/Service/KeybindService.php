@@ -40,9 +40,10 @@ class KeybindService {
     private function setDefaultKeybinds(): void {
         $this->keybinds = [
             'quit' => 'q',
-            'help' => 'h',
             'move_up' => 'k',
             'move_down' => 'j',
+            'move_left' => 'h',
+            'move_right' => 'l',
             'select' => 'enter',
             'move_task' => 'm',
             'delete_task' => 'd',
@@ -66,6 +67,7 @@ class KeybindService {
     public function getActionForKey(string $pressedKey, ?Event $event = null): KeyboardAction {
         foreach ($this->keybinds as $action => $key) {
             if ($key === $pressedKey) {
+                $this->logger->info('actionKey found: {action}', ['action' => $action]);
                 return new KeyboardAction($action, $event);
             }
         }

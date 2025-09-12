@@ -144,14 +144,4 @@ class Engine {
         $this->logger->info("Saving board $boardName");
         $this->fileService->export($this->board, $boardName);
     }
-    private function handleKeybindAction(string $action): void {
-        switch ($action) {
-            case 'save':
-                $this->exportBoard('autosave.json');
-                break;
-            default:
-                $this->logger->info("Unhandled keybind action: {$action}");
-                break;
-        }
-    }
 }

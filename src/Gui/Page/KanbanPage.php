@@ -74,10 +74,10 @@ final class KanbanPage implements GuiComponent
         }
 
         switch ($action) {
-            case 'h':
+            case 'move_left':
                 $this->activeComponent = 'task';
                 break;
-            case 'l':
+            case 'move_right':
                 $this->activeComponent = 'boardsection';
                 break;
             case 'move_up':
