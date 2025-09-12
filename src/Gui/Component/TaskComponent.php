@@ -67,12 +67,9 @@ final class TaskComponent implements GuiComponent
     {
         $widget = BlockWidget::default()
             ->borders(Borders::ALL)
+            ->borderStyle(Style::default()->fg($this->isActive ? Colors::$GREEN : Colors::$GREY))
             ->titles(Title::fromString('Tasks'))
             ->widget($this->taskTable());
-
-        if ($this->isActive) {
-            $widget = $widget->borderStyle(Style::default()->fg(Colors::$GREEN));
-        }
 
         return $widget;
     }

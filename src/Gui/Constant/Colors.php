@@ -13,6 +13,7 @@ final class Colors
     public static $YELLOW;
     public static $CYAN;
     public static $MAGENTA;
+    public static $GREY;
 }
 
 Colors::$GREEN   = RgbColor::fromRgb(0, 255, 0);
@@ -23,3 +24,4 @@ Colors::$BLUE    = RgbColor::fromRgb(0, 0, 255);
 Colors::$YELLOW  = RgbColor::fromRgb(255, 255, 0);
 Colors::$CYAN    = RgbColor::fromRgb(0, 255, 255);
 Colors::$MAGENTA = RgbColor::fromRgb(255, 0, 255);
+Colors::$GREY    = RgbColor::fromRgb(128, 128, 128);

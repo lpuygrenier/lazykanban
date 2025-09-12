@@ -82,6 +82,7 @@ final class BoardSectionComponent implements GuiComponent
         if (empty($this->boardFiles)) {
             return BlockWidget::default()
                 ->borders(Borders::ALL)
+                ->borderStyle(Style::default()->fg($this->isActive ? Colors::$GREEN : Colors::$GREY))
                 ->titles(Title::fromString('Boards'))
                 ->widget(
                     ParagraphWidget::fromText(
@@ -100,6 +101,7 @@ final class BoardSectionComponent implements GuiComponent
 
         $widget = BlockWidget::default()
             ->borders(Borders::ALL)
+            ->borderStyle(Style::default()->fg($this->isActive ? Colors::$GREEN : Colors::$GREY))
             ->titles(Title::fromString('Boards'))
             ->widget(
                 TableWidget::default()
@@ -109,10 +111,6 @@ final class BoardSectionComponent implements GuiComponent
                     ->widths(Constraint::percentage(100))
                     ->rows(...$boardRows)
             );
-
-        if ($this->isActive) {
-            $widget = $widget->borderStyle(Style::default()->fg(Colors::$GREEN));
-        }
 
         return $widget;
     }

@@ -89,6 +89,7 @@ final class BoardComponent implements GuiComponent
 
         return BlockWidget::default()
             ->borders(Borders::ALL)
+            ->borderStyle(Style::default()->fg(Colors::$GREY))
             ->titles(Title::fromString($title))
             ->widget($columnContent);
     }
@@ -103,6 +104,7 @@ final class BoardComponent implements GuiComponent
 
         return BlockWidget::default()
             ->borders(Borders::ALL)
+            ->borderStyle(Style::default()->fg(Colors::$GREY))
             ->widget(
                 ParagraphWidget::fromText(
                     Text::parse($content)
