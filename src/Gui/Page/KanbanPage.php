@@ -9,40 +9,29 @@ use Lpuygrenier\Lazykanban\Entity\Status;
 use Lpuygrenier\Lazykanban\Entity\Task;
 use Lpuygrenier\Lazykanban\Gui\KeyboardAction;
 use Lpuygrenier\Lazykanban\Gui\GuiComponent;
-use PhpTui\Tui\Extension\Core\Widget\BlockWidget;
+use Lpuygrenier\Lazykanban\Gui\Component\TaskComponent;
+use Lpuygrenier\Lazykanban\Gui\Component\BoardComponent;
+use Lpuygrenier\Lazykanban\Gui\Component\BoardSectionComponent;
 use PhpTui\Tui\Extension\Core\Widget\GridWidget;
-use PhpTui\Tui\Extension\Core\Widget\Paragraph\Wrap;
-use PhpTui\Tui\Extension\Core\Widget\ParagraphWidget;
-use PhpTui\Tui\Extension\Core\Widget\Table\TableCell;
-use PhpTui\Tui\Extension\Core\Widget\Table\TableRow;
 use PhpTui\Tui\Extension\Core\Widget\Table\TableState;
-use PhpTui\Tui\Extension\Core\Widget\TableWidget;
 use PhpTui\Tui\Layout\Constraint;
-use PhpTui\Tui\Style\Style;
-use PhpTui\Tui\Text\Text;
-use PhpTui\Tui\Text\Title;
-use PhpTui\Tui\Widget\Borders;
 use PhpTui\Tui\Widget\Direction;
 use PhpTui\Tui\Widget\Widget;
 
 final class KanbanPage implements GuiComponent
 {
 
-    private TableState $state;
     private Board $board;
-    private bool $showPopup = false;
-    private string $editingField = 'name';
-    private ?Task $editingTask = null;
-    private string $nameValue = '';
-    private string $descriptionValue = '';
-    private array $boardFiles;
-    private int $boardSelected = 0;
+    private TaskComponent $taskComponent;
+    private BoardComponent $boardComponent;
+    private BoardSectionComponent $boardSectionComponent;
 
     public function __construct(Board $board, array $boardFiles = [])
     {
-        $this->state = new TableState(selected: 0);
         $this->board = $board;
-        $this->boardFiles = $boardFiles;
+        $this->taskComponent = new TaskComponent($board, new TableState(selected: 0));
+        $this->boardComponent = new BoardComponent($board);
+        $this->boardSectionComponent = new BoardSectionComponent($boardFiles, 0);
     }
 
 
@@ -55,14 +44,8 @@ final class KanbanPage implements GuiComponent
                 Constraint::percentage(75),
             )
             ->widgets(
-                // Left panel - Task list
-                BlockWidget::default()
-                    ->borders(Borders::ALL)
-                    ->titles(Title::fromString('Tasks'))
-                    ->widget($this->taskTable()),
-
-                // Right panel - Kanban board
-                $this->kanbanBoard()
+                $this->taskComponent->build(),
+                $this->boardComponent->build()
             );
 
         return GridWidget::default()
@@ -73,7 +56,7 @@ final class KanbanPage implements GuiComponent
             )
             ->widgets(
                 $mainContent,
-                $this->boardSection()
+                $this->boardSectionComponent->build()
             );
     }
 
@@ -84,25 +67,14 @@ final class KanbanPage implements GuiComponent
             return;
         }
 
-        $totalTasks = count($this->board->todo) + count($this->board->inProgress) + count($this->board->done);
         switch ($action) {
             case 'move_up':
-                if ($this->state->selected > 0) {
-                    $this->state->selected = $this->state->selected - 1;
-                }
-                // Also handle board navigation
-                if ($this->boardSelected > 0) {
-                    $this->boardSelected--;
-                }
+                $this->taskComponent->moveUp();
+                $this->boardSectionComponent->moveUp();
                 break;
             case 'move_down':
-                if ($this->state->selected < $totalTasks - 1) {
-                    $this->state->selected = $this->state->selected + 1;
-                }
-                // Also handle board navigation
-                if ($this->boardSelected < count($this->boardFiles) - 1) {
-                    $this->boardSelected++;
-                }
+                $this->taskComponent->moveDown();
+                $this->boardSectionComponent->moveDown();
                 break;
             case 'move_task':
                 $this->moveSelectedTask();
@@ -113,41 +85,7 @@ final class KanbanPage implements GuiComponent
         }
     }
 
-    private function taskTable(): TableWidget
-    {
-        // Get all tasks from the board
-        $allTasks = array_merge(
-            array_map(fn($task) => ['task' => $task, 'status' => 'TODO'], $this->board->todo),
-            array_map(fn($task) => ['task' => $task, 'status' => 'IN_PROGRESS'], $this->board->inProgress),
-            array_map(fn($task) => ['task' => $task, 'status' => 'DONE'], $this->board->done)
-        );
 
-        return TableWidget::default()
-                            ->state($this->state)
-                            ->highlightSymbol('X')
-                            ->highlightStyle(Style::default()->black()->onCyan())
-                            ->widths(
-                                Constraint::percentage(percentage: 10),
-                                Constraint::percentage(percentage: 50),
-                                Constraint::percentage(percentage: 30),
-                            )
-                            ->header(
-                                TableRow::fromCells(
-                                    TableCell::fromString('ID'),
-                                    TableCell::fromString('Task'),
-                                    TableCell::fromString('Status'),
-                                )
-                            )
-                            ->rows(...array_map(function (array $taskData) {
-                                $task = $taskData['task'];
-                                $status = $taskData['status'];
-                                return TableRow::fromCells(
-                                    TableCell::fromString((string)$task->getId()),
-                                    TableCell::fromString($task->getName()),
-                                    TableCell::fromString($status)
-                                );
-                            }, $allTasks));
-    }
 
     private function kanbanBoard(): Widget {
         return GridWidget::default()
@@ -244,9 +182,10 @@ final class KanbanPage implements GuiComponent
             array_map(fn($task) => ['task' => $task, 'status' => 'DONE'], $this->board->done)
         );
 
-        if (isset($allTasks[$this->state->selected])) {
-            $task = $allTasks[$this->state->selected]['task'];
-            $status = $allTasks[$this->state->selected]['status'];
+        $state = $this->taskComponent->getState();
+        if (isset($allTasks[$state->selected])) {
+            $task = $allTasks[$state->selected]['task'];
+            $status = $allTasks[$state->selected]['status'];
             $nextStatus = match ($status) {
                 'TODO' => Status::IN_PROGRESS,
                 'IN_PROGRESS' => Status::DONE,
@@ -264,13 +203,14 @@ final class KanbanPage implements GuiComponent
             array_map(fn($task) => ['task' => $task, 'status' => 'DONE'], $this->board->done)
         );
 
-        if (isset($allTasks[$this->state->selected])) {
-            $task = $allTasks[$this->state->selected]['task'];
+        $state = $this->taskComponent->getState();
+        if (isset($allTasks[$state->selected])) {
+            $task = $allTasks[$state->selected]['task'];
             $this->board->remove($task);
             // Adjust selection if necessary
             $totalTasks = count($this->board->todo) + count($this->board->inProgress) + count($this->board->done);
-            if ($this->state->selected >= $totalTasks) {
-                $this->state->selected = max(0, $totalTasks - 1);
+            if ($state->selected >= $totalTasks) {
+                $state->selected = max(0, $totalTasks - 1);
             }
         }
     }
