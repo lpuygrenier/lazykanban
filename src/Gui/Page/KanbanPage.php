@@ -23,6 +23,7 @@ final class KanbanPage implements GuiComponent
     private TaskComponent $taskComponent;
     private BoardComponent $boardComponent;
     private BoardSectionComponent $boardSectionComponent;
+    private string $activeComponent = 'task';
 
     public function __construct(Board $board, array $boardFiles = [])
     {
@@ -35,6 +36,10 @@ final class KanbanPage implements GuiComponent
 
     public function build(): Widget
     {
+        $this->taskComponent->setActive($this->activeComponent === 'task');
+        $this->boardComponent->setActive($this->activeComponent === 'board');
+        $this->boardSectionComponent->setActive($this->activeComponent === 'boardsection');
+
         $mainContent = GridWidget::default()
             ->direction(Direction::Horizontal)
             ->constraints(
@@ -66,17 +71,25 @@ final class KanbanPage implements GuiComponent
         }
 
         switch ($action) {
-            case 'move_up':
-                $this->taskComponent->moveUp();
-                $this->boardSectionComponent->moveUp();
+            case 'h':
+                $this->activeComponent = 'task';
                 break;
+            case 'l':
+                $this->activeComponent = 'boardsection';
+                break;
+            case 'move_up':
             case 'move_down':
-                $this->taskComponent->moveDown();
-                $this->boardSectionComponent->moveDown();
+                if ($this->activeComponent === 'task') {
+                    $this->taskComponent->handleKeybindAction($keyboardAction);
+                } elseif ($this->activeComponent === 'boardsection') {
+                    $this->boardSectionComponent->handleKeybindAction($keyboardAction);
+                }
                 break;
             case 'move_task':
             case 'delete_task':
-                $this->taskComponent->handleKeybindAction($keyboardAction);
+                if ($this->activeComponent === 'task') {
+                    $this->taskComponent->handleKeybindAction($keyboardAction);
+                }
                 break;
         }
     }

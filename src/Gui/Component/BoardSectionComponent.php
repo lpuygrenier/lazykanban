@@ -6,6 +6,7 @@ namespace Lpuygrenier\Lazykanban\Gui\Component;
 
 use Lpuygrenier\Lazykanban\Gui\KeyboardAction;
 use Lpuygrenier\Lazykanban\Gui\GuiComponent;
+use PhpTui\Tui\Color\Color;
 use PhpTui\Tui\Extension\Core\Widget\BlockWidget;
 use PhpTui\Tui\Extension\Core\Widget\Paragraph\Wrap;
 use PhpTui\Tui\Extension\Core\Widget\ParagraphWidget;
@@ -24,11 +25,17 @@ final class BoardSectionComponent implements GuiComponent
 {
     private array $boardFiles;
     private int $boardSelected;
+    private bool $isActive = false;
 
     public function __construct(array $boardFiles, int $boardSelected)
     {
         $this->boardFiles = $boardFiles;
         $this->boardSelected = $boardSelected;
+    }
+
+    public function setActive(bool $active): void
+    {
+        $this->isActive = $active;
     }
 
     public function getSelected(): int
@@ -76,7 +83,7 @@ final class BoardSectionComponent implements GuiComponent
 
         $boardState = new TableState(selected: $this->boardSelected);
 
-        return BlockWidget::default()
+        $widget = BlockWidget::default()
             ->borders(Borders::ALL)
             ->titles(Title::fromString('Boards'))
             ->widget(
@@ -87,11 +94,28 @@ final class BoardSectionComponent implements GuiComponent
                     ->widths(Constraint::percentage(100))
                     ->rows(...$boardRows)
             );
+
+        if ($this->isActive) {
+            $widget = $widget->borderStyle(Style::default()->fg(Color::Green));
+        }
+
+        return $widget;
     }
 
     public function handleKeybindAction(KeyboardAction $keyboardAction): void
     {
-        // Board section doesn't handle keyboard actions directly
-        // Actions are handled at KanbanPage level
+        $action = $keyboardAction->getAction();
+        if ($action === null) {
+            return;
+        }
+
+        switch ($action) {
+            case 'move_up':
+                $this->moveUp();
+                break;
+            case 'move_down':
+                $this->moveDown();
+                break;
+        }
     }
 }

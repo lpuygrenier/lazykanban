@@ -7,11 +7,13 @@ namespace Lpuygrenier\Lazykanban\Gui\Component;
 use Lpuygrenier\Lazykanban\Entity\Board;
 use Lpuygrenier\Lazykanban\Gui\KeyboardAction;
 use Lpuygrenier\Lazykanban\Gui\GuiComponent;
+use PhpTui\Tui\Color\Color;
 use PhpTui\Tui\Extension\Core\Widget\BlockWidget;
 use PhpTui\Tui\Extension\Core\Widget\GridWidget;
 use PhpTui\Tui\Extension\Core\Widget\Paragraph\Wrap;
 use PhpTui\Tui\Extension\Core\Widget\ParagraphWidget;
 use PhpTui\Tui\Layout\Constraint;
+use PhpTui\Tui\Style\Style;
 use PhpTui\Tui\Text\Text;
 use PhpTui\Tui\Text\Title;
 use PhpTui\Tui\Widget\Borders;
@@ -21,15 +23,30 @@ use PhpTui\Tui\Widget\Widget;
 final class BoardComponent implements GuiComponent
 {
     private Board $board;
+    private bool $isActive = false;
 
     public function __construct(Board $board)
     {
         $this->board = $board;
     }
 
+    public function setActive(bool $active): void
+    {
+        $this->isActive = $active;
+    }
+
     public function build(): Widget
     {
-        return $this->kanbanBoard();
+        $board = $this->kanbanBoard();
+
+        if ($this->isActive) {
+            return BlockWidget::default()
+                ->borders(Borders::ALL)
+                ->borderStyle(Style::default()->fg(Color::Green))
+                ->widget($board);
+        } else {
+            return $board;
+        }
     }
 
     public function handleKeybindAction(KeyboardAction $keyboardAction): void

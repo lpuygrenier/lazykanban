@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Lpuygrenier\Lazykanban\Gui\Component;
 
 use Lpuygrenier\Lazykanban\Entity\Board;
+use Lpuygrenier\Lazykanban\Entity\Status;
 use Lpuygrenier\Lazykanban\Gui\KeyboardAction;
 use Lpuygrenier\Lazykanban\Gui\GuiComponent;
+use PhpTui\Tui\Color\Color;
 use PhpTui\Tui\Extension\Core\Widget\BlockWidget;
 use PhpTui\Tui\Extension\Core\Widget\GridWidget;
 use PhpTui\Tui\Extension\Core\Widget\Paragraph\Wrap;
@@ -26,11 +28,17 @@ final class TaskComponent implements GuiComponent
 {
     private Board $board;
     private TableState $state;
+    private bool $isActive = false;
 
     public function __construct(Board $board, TableState $state)
     {
         $this->board = $board;
         $this->state = $state;
+    }
+
+    public function setActive(bool $active): void
+    {
+        $this->isActive = $active;
     }
 
     public function getState(): TableState
@@ -56,10 +64,16 @@ final class TaskComponent implements GuiComponent
 
     public function build(): Widget
     {
-        return BlockWidget::default()
+        $widget = BlockWidget::default()
             ->borders(Borders::ALL)
             ->titles(Title::fromString('Tasks'))
             ->widget($this->taskTable());
+
+        if ($this->isActive) {
+            $widget = $widget->borderStyle(Style::default()->fg(Color::Green));
+        }
+
+        return $widget;
     }
 
     public function handleKeybindAction(KeyboardAction $keyboardAction): void
@@ -70,6 +84,12 @@ final class TaskComponent implements GuiComponent
         }
 
         switch ($action) {
+            case 'move_up':
+                $this->moveUp();
+                break;
+            case 'move_down':
+                $this->moveDown();
+                break;
             case 'move_task':
                 $this->moveSelectedTask();
                 break;
