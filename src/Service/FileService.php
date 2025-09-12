@@ -91,6 +91,28 @@ class FileService {
         return $tasks;
     }
 
+    public function listBoardFiles(): array {
+        $syncDirectory = $this->configService->getBoardSyncDirectory();
+        if (!is_dir($syncDirectory)) {
+            $this->logger->warning('[FileService] - Board sync directory does not exist: ' . $syncDirectory);
+            return [];
+        }
+
+        $files = scandir($syncDirectory);
+        if ($files === false) {
+            $this->logger->error('[FileService] - Failed to scan directory: ' . $syncDirectory);
+            return [];
+        }
+
+        // Filter out . and .. and only include .json files
+        $boardFiles = array_filter($files, function($file) {
+            return $file !== '.' && $file !== '..' && pathinfo($file, PATHINFO_EXTENSION) === 'json';
+        });
+
+        $this->logger->info('[FileService] - Found ' . count($boardFiles) . ' board files');
+        return array_values($boardFiles);
+    }
+
     private function buildFilePath(string $filename): string {
         $syncDirectory = $this->configService->getBoardSyncDirectory();
         return rtrim($syncDirectory, '/') . '/' . ltrim($filename, '/');

@@ -8,9 +8,6 @@ use Lpuygrenier\Lazykanban\Entity\Board;
 use Lpuygrenier\Lazykanban\Entity\Status;
 use Lpuygrenier\Lazykanban\Entity\Task;
 use Lpuygrenier\Lazykanban\Gui\KeyboardAction;
-use Monolog\Logger;
-use PhpTui\Term\Event;
-use PhpTui\Term\KeyCode;
 use Lpuygrenier\Lazykanban\Gui\GuiComponent;
 use PhpTui\Tui\Extension\Core\Widget\BlockWidget;
 use PhpTui\Tui\Extension\Core\Widget\GridWidget;
@@ -22,8 +19,6 @@ use PhpTui\Tui\Extension\Core\Widget\Table\TableState;
 use PhpTui\Tui\Extension\Core\Widget\TableWidget;
 use PhpTui\Tui\Layout\Constraint;
 use PhpTui\Tui\Style\Style;
-use PhpTui\Tui\Text\Line;
-use PhpTui\Tui\Text\Span;
 use PhpTui\Tui\Text\Text;
 use PhpTui\Tui\Text\Title;
 use PhpTui\Tui\Widget\Borders;
@@ -40,17 +35,20 @@ final class KanbanPage implements GuiComponent
     private ?Task $editingTask = null;
     private string $nameValue = '';
     private string $descriptionValue = '';
+    private array $boardFiles;
+    private int $boardSelected = 0;
 
-    public function __construct(Board $board)
+    public function __construct(Board $board, array $boardFiles = [])
     {
         $this->state = new TableState(selected: 0);
         $this->board = $board;
+        $this->boardFiles = $boardFiles;
     }
 
 
     public function build(): Widget
     {
-        $grid = GridWidget::default()
+        $mainContent = GridWidget::default()
             ->direction(Direction::Horizontal)
             ->constraints(
                 Constraint::percentage(25),
@@ -65,10 +63,18 @@ final class KanbanPage implements GuiComponent
 
                 // Right panel - Kanban board
                 $this->kanbanBoard()
-            )
-        ;
+            );
 
-        return $grid;
+        return GridWidget::default()
+            ->direction(Direction::Vertical)
+            ->constraints(
+                Constraint::percentage(75),
+                Constraint::percentage(25),
+            )
+            ->widgets(
+                $mainContent,
+                $this->boardSection()
+            );
     }
 
 
@@ -84,10 +90,18 @@ final class KanbanPage implements GuiComponent
                 if ($this->state->selected > 0) {
                     $this->state->selected = $this->state->selected - 1;
                 }
+                // Also handle board navigation
+                if ($this->boardSelected > 0) {
+                    $this->boardSelected--;
+                }
                 break;
             case 'move_down':
                 if ($this->state->selected < $totalTasks - 1) {
                     $this->state->selected = $this->state->selected + 1;
+                }
+                // Also handle board navigation
+                if ($this->boardSelected < count($this->boardFiles) - 1) {
+                    $this->boardSelected++;
                 }
                 break;
             case 'move_task':
@@ -169,6 +183,40 @@ final class KanbanPage implements GuiComponent
             ->borders(Borders::ALL)
             ->titles(Title::fromString($title))
             ->widget($columnContent);
+    }
+
+    private function boardSection(): Widget
+    {
+        if (empty($this->boardFiles)) {
+            return BlockWidget::default()
+                ->borders(Borders::ALL)
+                ->titles(Title::fromString('Boards'))
+                ->widget(
+                    ParagraphWidget::fromText(
+                        Text::parse('<fg=darkgray>No board files found</>')
+                    )
+                );
+        }
+
+        $boardRows = array_map(function ($file) {
+            return TableRow::fromCells(
+                TableCell::fromString($file)
+            );
+        }, $this->boardFiles);
+
+        $boardState = new TableState(selected: $this->boardSelected);
+
+        return BlockWidget::default()
+            ->borders(Borders::ALL)
+            ->titles(Title::fromString('Boards'))
+            ->widget(
+                TableWidget::default()
+                    ->state($boardState)
+                    ->highlightSymbol('>')
+                    ->highlightStyle(Style::default()->black()->onCyan())
+                    ->widths(Constraint::percentage(100))
+                    ->rows(...$boardRows)
+            );
     }
 
     private function taskCard($task): Widget

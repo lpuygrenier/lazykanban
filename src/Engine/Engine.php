@@ -65,8 +65,9 @@ class Engine {
             ->addExtension(new BdfExtension())
             ->build();
 
-        // $this->currentGuiComponent = new KanbanPage($this->board);
-        $this->currentGuiComponent = new Input($this->logger);
+        $boardFiles = $this->fileService->listBoardFiles();
+        $this->currentGuiComponent = new KanbanPage($this->board, $boardFiles);
+        // $this->currentGuiComponent = new Input($this->logger);
     }
 
     public function run(): int {
