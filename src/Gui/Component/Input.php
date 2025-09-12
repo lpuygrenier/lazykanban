@@ -64,7 +64,7 @@ final class Input implements GuiComponent
                     );
                 } else {
                     $before = mb_substr($line, 0, $cursorPos->x);
-                    $after = mb_substr($line, $cursorPos->x);
+                    $after = mb_substr($line, $cursorPos->x + 1);
                     $cursorChar = $cursorPos->x < mb_strlen($line) ? mb_substr($line, $cursorPos->x, 1) : '_';
                     $displayLines[] = Line::fromSpans(
                         Span::fromString($before),
