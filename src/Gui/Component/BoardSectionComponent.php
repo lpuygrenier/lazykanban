@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Lpuygrenier\Lazykanban\Gui\Component;
 
+use Lpuygrenier\Lazykanban\Gui\Constant\Colors;
 use Lpuygrenier\Lazykanban\Gui\KeyboardAction;
 use Lpuygrenier\Lazykanban\Gui\GuiComponent;
-use PhpTui\Tui\Color\Color;
 use PhpTui\Tui\Extension\Core\Widget\BlockWidget;
 use PhpTui\Tui\Extension\Core\Widget\Paragraph\Wrap;
 use PhpTui\Tui\Extension\Core\Widget\ParagraphWidget;
@@ -90,13 +90,13 @@ final class BoardSectionComponent implements GuiComponent
                 TableWidget::default()
                     ->state($boardState)
                     ->highlightSymbol('>')
-                    ->highlightStyle(Style::default()->black()->onCyan())
+                    ->highlightStyle(Style::default()->fg(Colors::$BLACK)->bg(Colors::$CYAN))
                     ->widths(Constraint::percentage(100))
                     ->rows(...$boardRows)
             );
 
         if ($this->isActive) {
-            $widget = $widget->borderStyle(Style::default()->fg(Color::Green));
+            $widget = $widget->borderStyle(Style::default()->fg(Colors::$GREEN));
         }
 
         return $widget;

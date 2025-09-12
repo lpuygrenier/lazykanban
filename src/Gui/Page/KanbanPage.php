@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Lpuygrenier\Lazykanban\Gui\Page;
 
 use Lpuygrenier\Lazykanban\Entity\Board;
+use Lpuygrenier\Lazykanban\Gui\Constant\Colors;
 use Lpuygrenier\Lazykanban\Gui\KeyboardAction;
 use Lpuygrenier\Lazykanban\Gui\GuiComponent;
 use Lpuygrenier\Lazykanban\Gui\Component\TaskComponent;
@@ -144,7 +145,7 @@ final class KanbanPage implements GuiComponent
                 TableWidget::default()
                     ->state($boardState)
                     ->highlightSymbol('>')
-                    ->highlightStyle(Style::default()->black()->onCyan())
+                    ->highlightStyle(Style::default()->fg(Colors::BLACK)->bg(Colors::CYAN))
                     ->widths(Constraint::percentage(100))
                     ->rows(...$boardRows)
             );

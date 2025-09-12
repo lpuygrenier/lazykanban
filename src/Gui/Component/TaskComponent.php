@@ -6,6 +6,7 @@ namespace Lpuygrenier\Lazykanban\Gui\Component;
 
 use Lpuygrenier\Lazykanban\Entity\Board;
 use Lpuygrenier\Lazykanban\Entity\Status;
+use Lpuygrenier\Lazykanban\Gui\Constant\Colors;
 use Lpuygrenier\Lazykanban\Gui\KeyboardAction;
 use Lpuygrenier\Lazykanban\Gui\GuiComponent;
 use PhpTui\Tui\Color\Color;
@@ -70,7 +71,7 @@ final class TaskComponent implements GuiComponent
             ->widget($this->taskTable());
 
         if ($this->isActive) {
-            $widget = $widget->borderStyle(Style::default()->fg(Color::Green));
+            $widget = $widget->borderStyle(Style::default()->fg(Colors::$GREEN));
         }
 
         return $widget;
@@ -150,7 +151,7 @@ final class TaskComponent implements GuiComponent
         return TableWidget::default()
             ->state($this->state)
             ->highlightSymbol('X')
-            ->highlightStyle(Style::default()->black()->onCyan())
+            ->highlightStyle(Style::default()->fg(Colors::$BLACK)->bg(Colors::$CYAN))
             ->widths(
                 Constraint::percentage(10),
                 Constraint::percentage(50),

@@ -15,8 +15,8 @@ use PhpTui\Term\Event\CharKeyEvent;
 use PhpTui\Term\Event\CodedKeyEvent;
 use PhpTui\Term\Event\KeyEvent;
 use PhpTui\Term\KeyCode;
+use Lpuygrenier\Lazykanban\Gui\Constant\Colors;
 use Lpuygrenier\Lazykanban\Gui\GuiComponent;
-use PhpTui\Tui\Color\RgbColor;
 use PhpTui\Tui\Extension\Core\Widget\BlockWidget;
 use PhpTui\Tui\Extension\Core\Widget\GridWidget;
 use PhpTui\Tui\Extension\Core\Widget\Paragraph\Wrap;
@@ -60,7 +60,7 @@ final class Input implements GuiComponent
             if ($index === $cursorPos->y) {
                 if ($line === "") {
                     $displayLines[] = Line::fromSpans(
-                        Span::fromString("_")->style(Style::default()->bg(RgbColor::fromRgb(255, 255, 255))->fg(RgbColor::fromRgb(0, 0, 0))),
+                        Span::fromString("_")->style(Style::default()->bg(Colors::$WHITE)->fg(Colors::$BLACK)),
                     );
                 } else {
                     $before = mb_substr($line, 0, $cursorPos->x);
@@ -68,7 +68,7 @@ final class Input implements GuiComponent
                     $cursorChar = $cursorPos->x < mb_strlen($line) ? mb_substr($line, $cursorPos->x, 1) : '_';
                     $displayLines[] = Line::fromSpans(
                         Span::fromString($before),
-                        Span::fromString($cursorChar)->style(Style::default()->bg(RgbColor::fromRgb(255, 255, 255))->fg(RgbColor::fromRgb(0, 0, 0))),
+                        Span::fromString($cursorChar)->style(Style::default()->bg(Colors::$WHITE)->fg(Colors::$BLACK)),
                         Span::fromString($after),
                     );
                 }

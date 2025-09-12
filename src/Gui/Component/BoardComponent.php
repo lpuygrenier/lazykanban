@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Lpuygrenier\Lazykanban\Gui\Component;
 
 use Lpuygrenier\Lazykanban\Entity\Board;
+use Lpuygrenier\Lazykanban\Gui\Constant\Colors;
 use Lpuygrenier\Lazykanban\Gui\KeyboardAction;
 use Lpuygrenier\Lazykanban\Gui\GuiComponent;
 use PhpTui\Tui\Color\Color;
@@ -42,7 +43,7 @@ final class BoardComponent implements GuiComponent
         if ($this->isActive) {
             return BlockWidget::default()
                 ->borders(Borders::ALL)
-                ->borderStyle(Style::default()->fg(Color::Green))
+                ->borderStyle(Style::default()->fg(Colors::$GREEN))
                 ->widget($board);
         } else {
             return $board;
