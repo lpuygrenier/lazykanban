@@ -64,8 +64,58 @@ final class TaskComponent implements GuiComponent
 
     public function handleKeybindAction(KeyboardAction $keyboardAction): void
     {
-        // Task component doesn't handle keyboard actions directly
-        // Actions are handled at KanbanPage level
+        $action = $keyboardAction->getAction();
+        if ($action === null) {
+            return;
+        }
+
+        switch ($action) {
+            case 'move_task':
+                $this->moveSelectedTask();
+                break;
+            case 'delete_task':
+                $this->deleteSelectedTask();
+                break;
+        }
+    }
+
+    public function moveSelectedTask(): void
+    {
+        $allTasks = array_merge(
+            array_map(fn($task) => ['task' => $task, 'status' => 'TODO'], $this->board->todo),
+            array_map(fn($task) => ['task' => $task, 'status' => 'IN_PROGRESS'], $this->board->inProgress),
+            array_map(fn($task) => ['task' => $task, 'status' => 'DONE'], $this->board->done)
+        );
+
+        if (isset($allTasks[$this->state->selected])) {
+            $task = $allTasks[$this->state->selected]['task'];
+            $status = $allTasks[$this->state->selected]['status'];
+            $nextStatus = match ($status) {
+                'TODO' => Status::IN_PROGRESS,
+                'IN_PROGRESS' => Status::DONE,
+                'DONE' => Status::TODO,
+            };
+            $this->board->move($task, $nextStatus);
+        }
+    }
+
+    public function deleteSelectedTask(): void
+    {
+        $allTasks = array_merge(
+            array_map(fn($task) => ['task' => $task, 'status' => 'TODO'], $this->board->todo),
+            array_map(fn($task) => ['task' => $task, 'status' => 'IN_PROGRESS'], $this->board->inProgress),
+            array_map(fn($task) => ['task' => $task, 'status' => 'DONE'], $this->board->done)
+        );
+
+        if (isset($allTasks[$this->state->selected])) {
+            $task = $allTasks[$this->state->selected]['task'];
+            $this->board->remove($task);
+            // Adjust selection if necessary
+            $totalTasks = count($this->board->todo) + count($this->board->inProgress) + count($this->board->done);
+            if ($this->state->selected >= $totalTasks) {
+                $this->state->selected = max(0, $totalTasks - 1);
+            }
+        }
     }
 
     private function taskTable(): TableWidget

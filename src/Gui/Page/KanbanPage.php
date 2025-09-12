@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace Lpuygrenier\Lazykanban\Gui\Page;
 
 use Lpuygrenier\Lazykanban\Entity\Board;
-use Lpuygrenier\Lazykanban\Entity\Status;
-use Lpuygrenier\Lazykanban\Entity\Task;
 use Lpuygrenier\Lazykanban\Gui\KeyboardAction;
 use Lpuygrenier\Lazykanban\Gui\GuiComponent;
 use Lpuygrenier\Lazykanban\Gui\Component\TaskComponent;
@@ -77,30 +75,12 @@ final class KanbanPage implements GuiComponent
                 $this->boardSectionComponent->moveDown();
                 break;
             case 'move_task':
-                $this->moveSelectedTask();
-                break;
             case 'delete_task':
-                $this->deleteSelectedTask();
+                $this->taskComponent->handleKeybindAction($keyboardAction);
                 break;
         }
     }
 
-
-
-    private function kanbanBoard(): Widget {
-        return GridWidget::default()
-            ->direction(Direction::Horizontal)
-            ->constraints(
-                Constraint::percentage(33),
-                Constraint::percentage(33),
-                Constraint::percentage(33),
-            )
-            ->widgets(
-                $this->taskColumn('TODO', $this->board->todo),
-                $this->taskColumn('IN PROGRESS', $this->board->inProgress),
-                $this->taskColumn('DONE', $this->board->done)
-            );
-    }
     private function taskColumn(string $title, array $tasks): Widget
     {
         $taskWidgets = array_map(fn($task) => $this->taskCard($task), $tasks);
@@ -174,44 +154,4 @@ final class KanbanPage implements GuiComponent
             );
     }
 
-    private function moveSelectedTask(): void
-    {
-        $allTasks = array_merge(
-            array_map(fn($task) => ['task' => $task, 'status' => 'TODO'], $this->board->todo),
-            array_map(fn($task) => ['task' => $task, 'status' => 'IN_PROGRESS'], $this->board->inProgress),
-            array_map(fn($task) => ['task' => $task, 'status' => 'DONE'], $this->board->done)
-        );
-
-        $state = $this->taskComponent->getState();
-        if (isset($allTasks[$state->selected])) {
-            $task = $allTasks[$state->selected]['task'];
-            $status = $allTasks[$state->selected]['status'];
-            $nextStatus = match ($status) {
-                'TODO' => Status::IN_PROGRESS,
-                'IN_PROGRESS' => Status::DONE,
-                'DONE' => Status::TODO,
-            };
-            $this->board->move($task, $nextStatus);
-        }
-    }
-
-    private function deleteSelectedTask(): void
-    {
-        $allTasks = array_merge(
-            array_map(fn($task) => ['task' => $task, 'status' => 'TODO'], $this->board->todo),
-            array_map(fn($task) => ['task' => $task, 'status' => 'IN_PROGRESS'], $this->board->inProgress),
-            array_map(fn($task) => ['task' => $task, 'status' => 'DONE'], $this->board->done)
-        );
-
-        $state = $this->taskComponent->getState();
-        if (isset($allTasks[$state->selected])) {
-            $task = $allTasks[$state->selected]['task'];
-            $this->board->remove($task);
-            // Adjust selection if necessary
-            $totalTasks = count($this->board->todo) + count($this->board->inProgress) + count($this->board->done);
-            if ($state->selected >= $totalTasks) {
-                $state->selected = max(0, $totalTasks - 1);
-            }
-        }
-    }
 }
