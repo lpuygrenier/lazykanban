@@ -26,11 +26,17 @@ final class BoardSectionComponent implements GuiComponent
     private array $boardFiles;
     private int $boardSelected;
     private bool $isActive = false;
+    private $onBoardSelected = null;
 
     public function __construct(array $boardFiles, int $boardSelected)
     {
         $this->boardFiles = $boardFiles;
         $this->boardSelected = $boardSelected;
+    }
+
+    public function setOnBoardSelected(callable $callback): void
+    {
+        $this->onBoardSelected = $callback;
     }
 
     public function setActive(bool $active): void
@@ -52,6 +58,7 @@ final class BoardSectionComponent implements GuiComponent
     {
         if ($this->boardSelected > 0) {
             $this->boardSelected--;
+            $this->triggerBoardSelection();
         }
     }
 
@@ -59,6 +66,14 @@ final class BoardSectionComponent implements GuiComponent
     {
         if ($this->boardSelected < count($this->boardFiles) - 1) {
             $this->boardSelected++;
+            $this->triggerBoardSelection();
+        }
+    }
+
+    private function triggerBoardSelection(): void
+    {
+        if ($this->onBoardSelected !== null && isset($this->boardFiles[$this->boardSelected])) {
+            ($this->onBoardSelected)($this->boardFiles[$this->boardSelected]);
         }
     }
 

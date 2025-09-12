@@ -67,6 +67,14 @@ class Engine {
 
         $boardFiles = $this->fileService->listBoardFiles();
         $this->currentGuiComponent = new KanbanPage($this->board, $boardFiles);
+
+        // Set up board switching callback
+        if ($this->currentGuiComponent instanceof KanbanPage) {
+            $this->currentGuiComponent->setOnBoardSwitch(function(string $boardFile) {
+                $this->switchToBoard($boardFile);
+            });
+        }
+
         // $this->currentGuiComponent = new Input($this->logger);
     }
 
@@ -138,6 +146,23 @@ class Engine {
             ->widgets(
                 $guiComponent->build(),
             );
+    }
+
+    private function switchToBoard(string $boardFile): void {
+        $this->logger->info("Switching to board: $boardFile");
+
+        // Load the new board
+        $newBoard = $this->fileService->import($boardFile);
+
+        // Update the current board
+        $this->board = $newBoard;
+
+        // Update the KanbanPage with the new board
+        if ($this->currentGuiComponent instanceof KanbanPage) {
+            $this->currentGuiComponent->updateBoard($newBoard);
+        }
+
+        $this->logger->info("Successfully switched to board: {$newBoard->name}");
     }
 
     private function exportBoard(string $boardName): void {

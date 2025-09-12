@@ -1,0 +1,45 @@
+{
+    "id": 2,
+    "name": "Fitness Tracker App",
+    "todo": {
+        "1": {
+            "id": 1,
+            "name": "Research Features",
+            "description": "Analyze popular fitness apps and define core features"
+        },
+        "2": {
+            "id": 2,
+            "name": "Wireframe UI",
+            "description": "Sketch main screens and UI/UX flow"
+        },
+        "3": {
+            "id": 3,
+            "name": "Select Tech Stack",
+            "description": "Choose frameworks and libraries for backend and frontend"
+        }
+    },
+    "inProgress": {
+        "4": {
+            "id": 4,
+            "name": "Build User Registration",
+            "description": "Implement account creation and user profile logic"
+        },
+        "5": {
+            "id": 5,
+            "name": "Connect to Wearable API",
+            "description": "Integrate app with fitness wearable for step tracking"
+        }
+    },
+    "done": {
+        "6": {
+            "id": 6,
+            "name": "Set Up Git Repository",
+            "description": "Created repo and pushed starter code"
+        },
+        "7": {
+            "id": 7,
+            "name": "Prepare Project Documentation",
+            "description": "Wrote project overview and goals in README"
+        }
+    }
+}

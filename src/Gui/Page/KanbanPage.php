@@ -25,6 +25,7 @@ final class KanbanPage implements GuiComponent
     private BoardComponent $boardComponent;
     private BoardSectionComponent $boardSectionComponent;
     private string $activeComponent = 'task';
+    private $onBoardSwitch = null;
 
     public function __construct(Board $board, array $boardFiles = [])
     {
@@ -32,6 +33,25 @@ final class KanbanPage implements GuiComponent
         $this->taskComponent = new TaskComponent($board, new TableState(selected: 0));
         $this->boardComponent = new BoardComponent($board);
         $this->boardSectionComponent = new BoardSectionComponent($boardFiles, 0);
+
+        // Set up board selection callback
+        $this->boardSectionComponent->setOnBoardSelected(function(string $boardFile) {
+            if ($this->onBoardSwitch !== null) {
+                ($this->onBoardSwitch)($boardFile);
+            }
+        });
+    }
+
+    public function setOnBoardSwitch(callable $callback): void
+    {
+        $this->onBoardSwitch = $callback;
+    }
+
+    public function updateBoard(Board $newBoard): void
+    {
+        $this->board = $newBoard;
+        $this->taskComponent = new TaskComponent($newBoard, new TableState(selected: 0));
+        $this->boardComponent = new BoardComponent($newBoard);
     }
 
 
