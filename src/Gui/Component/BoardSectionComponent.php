@@ -19,6 +19,7 @@ use PhpTui\Tui\Style\Style;
 use PhpTui\Tui\Text\Text;
 use PhpTui\Tui\Text\Title;
 use PhpTui\Tui\Widget\Borders;
+use PhpTui\Tui\Widget\BorderType;
 use PhpTui\Tui\Widget\Widget;
 
 final class BoardSectionComponent implements GuiComponent
@@ -82,6 +83,7 @@ final class BoardSectionComponent implements GuiComponent
         if (empty($this->boardFiles)) {
             return BlockWidget::default()
                 ->borders(Borders::ALL)
+                ->borderType(BorderType::Rounded)
                 ->borderStyle(Style::default()->fg($this->isActive ? Colors::$GREEN : Colors::$GREY))
                 ->titles(Title::fromString('Boards'))
                 ->widget(
@@ -101,6 +103,7 @@ final class BoardSectionComponent implements GuiComponent
 
         $widget = BlockWidget::default()
             ->borders(Borders::ALL)
+            ->borderType(BorderType::Rounded)
             ->borderStyle(Style::default()->fg($this->isActive ? Colors::$GREEN : Colors::$GREY))
             ->titles(Title::fromString('Boards'))
             ->widget(

@@ -23,6 +23,7 @@ use PhpTui\Tui\Style\Style;
 use PhpTui\Tui\Text\Text;
 use PhpTui\Tui\Text\Title;
 use PhpTui\Tui\Widget\Borders;
+use PhpTui\Tui\Widget\BorderType;
 use PhpTui\Tui\Widget\Widget;
 
 final class TaskComponent implements GuiComponent
@@ -67,6 +68,7 @@ final class TaskComponent implements GuiComponent
     {
         $widget = BlockWidget::default()
             ->borders(Borders::ALL)
+            ->borderType(BorderType::Rounded)
             ->borderStyle(Style::default()->fg($this->isActive ? Colors::$GREEN : Colors::$GREY))
             ->titles(Title::fromString('Tasks'))
             ->widget($this->taskTable());

@@ -18,6 +18,7 @@ use PhpTui\Tui\Style\Style;
 use PhpTui\Tui\Text\Text;
 use PhpTui\Tui\Text\Title;
 use PhpTui\Tui\Widget\Borders;
+use PhpTui\Tui\Widget\BorderType;
 use PhpTui\Tui\Widget\Direction;
 use PhpTui\Tui\Widget\Widget;
 
@@ -43,6 +44,7 @@ final class BoardComponent implements GuiComponent
         if ($this->isActive) {
             return BlockWidget::default()
                 ->borders(Borders::ALL)
+                ->borderType(BorderType::Rounded)
                 ->borderStyle(Style::default()->fg(Colors::$GREEN))
                 ->widget($board);
         } else {
@@ -89,6 +91,7 @@ final class BoardComponent implements GuiComponent
 
         return BlockWidget::default()
             ->borders(Borders::ALL)
+            ->borderType(BorderType::Rounded)
             ->borderStyle(Style::default()->fg(Colors::$GREY))
             ->titles(Title::fromString($title))
             ->widget($columnContent);
@@ -104,6 +107,7 @@ final class BoardComponent implements GuiComponent
 
         return BlockWidget::default()
             ->borders(Borders::ALL)
+            ->borderType(BorderType::Rounded)
             ->borderStyle(Style::default()->fg(Colors::$GREY))
             ->widget(
                 ParagraphWidget::fromText(

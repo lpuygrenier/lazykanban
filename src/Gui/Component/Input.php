@@ -33,6 +33,7 @@ use PhpTui\Tui\Text\Span;
 use PhpTui\Tui\Text\Text;
 use PhpTui\Tui\Text\Title;
 use PhpTui\Tui\Widget\Borders;
+use PhpTui\Tui\Widget\BorderType;
 use PhpTui\Tui\Widget\Direction;
 use PhpTui\Tui\Widget\Widget;
 
@@ -78,6 +79,7 @@ final class Input implements GuiComponent
         }
         return BlockWidget::default()
             ->borders(Borders::ALL)
+            ->borderType(BorderType::Rounded)
             ->titles(Title::fromString($this->label))
             ->widget(
                 ParagraphWidget::fromText(
