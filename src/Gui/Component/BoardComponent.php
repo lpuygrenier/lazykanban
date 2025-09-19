@@ -86,7 +86,7 @@ final class BoardComponent implements GuiComponent
 
         $columnContent = GridWidget::default()
             ->direction(Direction::Vertical)
-            ->constraints(...array_map(fn() => Constraint::length(3), $taskWidgets))
+            ->constraints(...array_map(fn() => Constraint::length(1), $taskWidgets))
             ->widgets(...$taskWidgets);
 
         return BlockWidget::default()
@@ -106,9 +106,6 @@ final class BoardComponent implements GuiComponent
         );
 
         return BlockWidget::default()
-            ->borders(Borders::ALL)
-            ->borderType(BorderType::Rounded)
-            ->borderStyle(Style::default()->fg(Colors::$GREY))
             ->widget(
                 ParagraphWidget::fromText(
                     Text::parse($content)
