@@ -44,7 +44,7 @@ class KeybindService {
             'move_down' => 'j',
             'move_left' => 'h',
             'move_right' => 'l',
-            'select' => 'enter',
+            'select' => 'e',
             'move_task' => 'm',
             'create_task' => 'n',
             'delete_task' => 'd',

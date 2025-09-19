@@ -73,6 +73,11 @@ final class Input implements GuiComponent
         $this->isActive = $active;
     }
 
+    public function setText(string $text): void
+    {
+        $this->textEditor = TextEditor::fromString($text);
+    }
+
     public function build(): Widget
     {
         $lines = $this->textEditor->viewportLines(0, $this->textEditor->lineCount());

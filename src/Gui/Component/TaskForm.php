@@ -13,13 +13,15 @@ use PhpTui\Tui\Widget\Widget;
 use PhpTui\Term\Event\CodedKeyEvent;
 use PhpTui\Term\KeyCode;
 
-final class CreateTaskForm implements GuiComponent
+final class TaskForm implements GuiComponent
 {
     private Input $nameInput;
     private Input $descriptionInput;
     private string $activeField = 'name';
     private $onSubmit = null;
     private $onCancel = null;
+    private bool $isEditMode = false;
+    private $editingTask = null;
 
     public function __construct()
     {
@@ -39,6 +41,22 @@ final class CreateTaskForm implements GuiComponent
         $this->onCancel = $callback;
     }
 
+    public function setEditMode($task): void
+    {
+        $this->isEditMode = true;
+        $this->editingTask = $task;
+        $this->nameInput->setText($task->getName());
+        $this->descriptionInput->setText($task->getDescription());
+        $this->activeField = 'name';
+    }
+
+    public function setCreateMode(): void
+    {
+        $this->isEditMode = false;
+        $this->editingTask = null;
+        $this->clearInputs();
+    }
+
     public function clearInputs(): void
     {
         $this->nameInput->clear();
@@ -47,6 +65,9 @@ final class CreateTaskForm implements GuiComponent
         // Reset active states
         $this->nameInput->setActive(true);
         $this->descriptionInput->setActive(false);
+        // Reset edit mode
+        $this->isEditMode = false;
+        $this->editingTask = null;
     }
 
     public function build(): Widget
@@ -82,7 +103,7 @@ final class CreateTaskForm implements GuiComponent
             if ($this->activeField === 'name' && $this->onSubmit) {
                 $name = $this->nameInput->getText();
                 $description = $this->descriptionInput->getText();
-                ($this->onSubmit)($name, $description);
+                ($this->onSubmit)($name, $description, $this->editingTask);
                 $this->clearInputs();
                 return;
             }

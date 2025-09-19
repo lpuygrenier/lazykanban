@@ -50,13 +50,19 @@ class Board {
         }
     }
 
-    public function countTasks(): int
+    public function getNextTaskId(): int
     {
         $allTasks = array_merge($this->todo, $this->inProgress, $this->done);
         if (empty($allTasks)) {
             return 1;
         }
         return max(array_keys($allTasks)) + 1;
+    }
+
+    public function update(Task $task, string $newName, string $newDescription): void
+    {
+        $task->setName($newName);
+        $task->setDescription($newDescription);
     }
 
     public function __toString(): string {

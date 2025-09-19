@@ -12,7 +12,7 @@ use Lpuygrenier\Lazykanban\Gui\GuiComponent;
 use Lpuygrenier\Lazykanban\Gui\Component\TaskComponent;
 use Lpuygrenier\Lazykanban\Gui\Component\BoardComponent;
 use Lpuygrenier\Lazykanban\Gui\Component\BoardSectionComponent;
-use Lpuygrenier\Lazykanban\Gui\Component\CreateTaskForm;
+use Lpuygrenier\Lazykanban\Gui\Component\TaskForm;
 use PhpTui\Tui\Extension\Core\Widget\GridWidget;
 use PhpTui\Tui\Extension\Core\Widget\Table\TableState;
 use PhpTui\Tui\Layout\Constraint;
@@ -26,8 +26,8 @@ final class KanbanPage implements GuiComponent
     private TaskComponent $taskComponent;
     private BoardComponent $boardComponent;
     private BoardSectionComponent $boardSectionComponent;
-    private ?CreateTaskForm $createTaskForm = null;
-    private bool $isCreatingTask = false;
+    private ?TaskForm $taskForm = null;
+    private bool $isEditingTask = false;
     private string $activeComponent = 'task';
     private $onBoardSwitch = null;
 
@@ -38,13 +38,13 @@ final class KanbanPage implements GuiComponent
         $this->boardComponent = new BoardComponent($board);
         $this->boardSectionComponent = new BoardSectionComponent($boardFiles, 0);
 
-        // Initialize create task form
-        $this->createTaskForm = new CreateTaskForm();
-        $this->createTaskForm->setOnSubmit(function(string $name, string $description) {
-            $this->submitCreateTask($name, $description);
+        // Initialize task form
+        $this->taskForm = new TaskForm();
+        $this->taskForm->setOnSubmit(function(string $name, string $description, $editingTask = null) {
+            $this->submitTask($name, $description, $editingTask);
         });
-        $this->createTaskForm->setOnCancel(function() {
-            $this->cancelCreateTask();
+        $this->taskForm->setOnCancel(function() {
+            $this->cancelTaskForm();
         });
 
         // Set up board selection callback
@@ -67,27 +67,45 @@ final class KanbanPage implements GuiComponent
         $this->boardComponent = new BoardComponent($newBoard);
     }
 
-    private function submitCreateTask(string $name, string $description): void
+    private function submitTask(string $name, string $description, $editingTask = null): void
     {
         if (!empty($name)) {
-            $taskId = $this->board->countTasks() + 1;
-            $task = new Task($taskId, $name, $description);
-            $this->board->add($task);
+            if ($editingTask !== null) {
+                // Update existing task
+                $this->board->update($editingTask, $name, $description);
+            } else {
+                // Create new task
+                $taskId = $this->board->getNextTaskId();
+                $task = new Task($taskId, $name, $description);
+                $this->board->add($task);
+            }
         }
-        $this->isCreatingTask = false;
+        $this->isEditingTask = false;
     }
 
-    private function cancelCreateTask(): void
+    private function cancelTaskForm(): void
     {
-        $this->isCreatingTask = false;
+        $this->isEditingTask = false;
+    }
+
+    private function getSelectedTask()
+    {
+        $allTasks = array_merge(
+            array_map(fn($task) => ['task' => $task, 'status' => 'TODO'], $this->board->todo),
+            array_map(fn($task) => ['task' => $task, 'status' => 'IN_PROGRESS'], $this->board->inProgress),
+            array_map(fn($task) => ['task' => $task, 'status' => 'DONE'], $this->board->done)
+        );
+
+        $selectedIndex = $this->taskComponent->getState()->selected;
+        return isset($allTasks[$selectedIndex]) ? $allTasks[$selectedIndex]['task'] : null;
     }
 
 
     public function build(): Widget
     {
-        // Show create task form if active
-        if ($this->isCreatingTask && $this->createTaskForm !== null) {
-            return $this->createTaskForm->build();
+        // Show task form if active
+        if ($this->isEditingTask && $this->taskForm !== null) {
+            return $this->taskForm->build();
         }
 
         $this->taskComponent->setActive($this->activeComponent === 'task');
@@ -121,9 +139,9 @@ final class KanbanPage implements GuiComponent
 
 
     public function handleKeybindAction(KeyboardAction $keyboardAction): void {
-        // Handle create task form if active
-        if ($this->isCreatingTask && $this->createTaskForm !== null) {
-            $this->createTaskForm->handleKeybindAction($keyboardAction);
+        // Handle task form if active
+        if ($this->isEditingTask && $this->taskForm !== null) {
+            $this->taskForm->handleKeybindAction($keyboardAction);
             return;
         }
 
@@ -134,7 +152,18 @@ final class KanbanPage implements GuiComponent
 
         switch ($action) {
             case 'create_task':
-                $this->isCreatingTask = true;
+                $this->taskForm->setCreateMode();
+                $this->isEditingTask = true;
+                break;
+            case 'select':
+                // Edit selected task
+                if ($this->activeComponent === 'task') {
+                    $selectedTask = $this->getSelectedTask();
+                    if ($selectedTask !== null) {
+                        $this->taskForm->setEditMode($selectedTask);
+                        $this->isEditingTask = true;
+                    }
+                }
                 break;
             case 'move_left':
                 $this->activeComponent = 'task';
