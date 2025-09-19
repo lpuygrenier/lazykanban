@@ -5,5 +5,6 @@
     "move_down": "j",
     "move_left": "h",
     "move_right": "l",
-    "select": "enter"
+    "select": "enter",
+    "create_task": "n"
 }

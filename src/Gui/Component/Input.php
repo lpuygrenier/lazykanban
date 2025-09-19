@@ -43,12 +43,28 @@ final class Input implements GuiComponent
     private $placeholder = "";
     private $label = "label";
     private TextEditor $textEditor;
+    private bool $isActive = false;
 
     private ?Logger $logger;
 
     public function __construct(?Logger $logger = null)
     {
         $this->logger = $logger;
+        $this->textEditor = TextEditor::fromString("");
+    }
+
+    public function setLabel(string $label): void
+    {
+        $this->label = $label;
+    }
+
+    public function getText(): string
+    {
+        return $this->textEditor->toString();
+    }
+
+    public function clear(): void
+    {
         $this->textEditor = TextEditor::fromString("");
     }
 

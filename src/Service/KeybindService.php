@@ -46,6 +46,7 @@ class KeybindService {
             'move_right' => 'l',
             'select' => 'enter',
             'move_task' => 'm',
+            'create_task' => 'n',
             'delete_task' => 'd',
         ];
         $this->logger->info('[KeybindService] - Using default keybinds');

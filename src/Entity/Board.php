@@ -50,6 +50,15 @@ class Board {
         }
     }
 
+    public function countTasks(): int
+    {
+        $allTasks = array_merge($this->todo, $this->inProgress, $this->done);
+        if (empty($allTasks)) {
+            return 1;
+        }
+        return max(array_keys($allTasks)) + 1;
+    }
+
     public function __toString(): string {
         $todoCount = count($this->todo);
         $inProgressCount = count($this->inProgress);
