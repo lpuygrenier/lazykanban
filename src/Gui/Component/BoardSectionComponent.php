@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Lpuygrenier\Lazykanban\Gui\Component;
 
 use Lpuygrenier\Lazykanban\Gui\Constant\Colors;
+use Lpuygrenier\Lazykanban\Gui\Constant\Styles;
 use Lpuygrenier\Lazykanban\Gui\KeyboardAction;
 use Lpuygrenier\Lazykanban\Gui\GuiComponent;
 use PhpTui\Tui\Extension\Core\Widget\BlockWidget;
@@ -101,6 +102,8 @@ final class BoardSectionComponent implements GuiComponent
 
         $boardState = new TableState(selected: $this->boardSelected);
 
+        $highlightStyle = $this->isActive ? Styles::$HIGHLIGHTED_STYLE : Style::default();
+
         $widget = BlockWidget::default()
             ->borders(Borders::ALL)
             ->borderType(BorderType::Rounded)
@@ -109,8 +112,8 @@ final class BoardSectionComponent implements GuiComponent
             ->widget(
                 TableWidget::default()
                     ->state($boardState)
-                    ->highlightSymbol('>')
-                    ->highlightStyle(Style::default()->fg(Colors::$BLACK)->bg(Colors::$CYAN))
+                    ->highlightSymbol(Styles::$HIGHLIGHTED_SYMBOL)
+                    ->highlightStyle($highlightStyle)
                     ->widths(Constraint::percentage(100))
                     ->rows(...$boardRows)
             );
