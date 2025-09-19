@@ -75,7 +75,6 @@ class Engine {
             });
         }
 
-        // $this->currentGuiComponent = new Input($this->logger);
     }
 
     public function run(): int {
@@ -103,14 +102,17 @@ class Engine {
         while (true) {
             // Handle events sent to the terminal
             while (null !== $event = $this->terminal->events()->next()) {
+                /** Global Keybind Action */
                 if ($event instanceof CharKeyEvent) {
-                    if ($event->modifiers === KeyModifiers::NONE) {
+                    if ($event->modifiers === KeyModifiers::CONTROL && $event->char === 'c') {
                         // Check for quit keybind
-                        if ($this->keybindService->isActionKey($event->char, 'quit')) {
-                            $this->logger->info('Quit key pressed, exiting application');
-                            break 2;
-                        }
+                        $this->logger->info('Quit key pressed, exiting application');
+                        break 2;
                     }
+                }
+
+                /** Local Keybind Action */
+                if ($event instanceof CharKeyEvent) {
                     $keyboardAction = $this->keybindService->getActionForKey($event->char, $event);
                     $this->currentGuiComponent->handleKeybindAction($keyboardAction);
                 } else if ($event instanceof CodedKeyEvent) {
@@ -118,10 +120,9 @@ class Engine {
                     $this->currentGuiComponent->handleKeybindAction($keyboardAction);
                 }
 
-                
-
             }
 
+            /** Render the app */
             $this->display->draw($this->buildLayout($this->currentGuiComponent));
             
             // sleep for Xms - note that it's encouraged to implement apps
@@ -135,6 +136,9 @@ class Engine {
         $this->terminal->execute(Actions::disableMouseCapture());
 
         return 0;
+    }
+    private function handleGlobalKeybindAction(string $layout): string {
+        
     }
 
     private function buildLayout(GuiComponent $guiComponent): Widget {
@@ -163,10 +167,5 @@ class Engine {
         }
 
         $this->logger->info("Successfully switched to board: {$newBoard->name}");
-    }
-
-    private function exportBoard(string $boardName): void {
-        $this->logger->info("Saving board $boardName");
-        $this->fileService->export($this->board, $boardName);
     }
 }
