@@ -10,7 +10,7 @@ final class Styles
 
 }
 
-Styles::$HIGHLIGHTED_STYLE = Style::default()->fg(Colors::$BLACK)->bg(Colors::$CYAN);
-Styles::$HIGHLIGHTED_SYMBOL = '>';
+Styles::$HIGHLIGHTED_STYLE = Style::default()->fg(Colors::$WHITE)->bg(Colors::$BLUE);
+Styles::$HIGHLIGHTED_SYMBOL = ' *';
 
 
