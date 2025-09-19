@@ -44,10 +44,17 @@ final class CreateTaskForm implements GuiComponent
         $this->nameInput->clear();
         $this->descriptionInput->clear();
         $this->activeField = 'name';
+        // Reset active states
+        $this->nameInput->setActive(true);
+        $this->descriptionInput->setActive(false);
     }
 
     public function build(): Widget
     {
+        // Set active state on inputs
+        $this->nameInput->setActive($this->activeField === 'name');
+        $this->descriptionInput->setActive($this->activeField === 'description');
+
         return GridWidget::default()
             ->direction(Direction::Vertical)
             ->constraints(
@@ -70,15 +77,16 @@ final class CreateTaskForm implements GuiComponent
             return;
         }
 
-        // Handle Enter to submit
+        // Handle Enter - submit only when name field is active
         if ($event instanceof CodedKeyEvent && $event->code === KeyCode::Enter) {
-            if ($this->onSubmit) {
+            if ($this->activeField === 'name' && $this->onSubmit) {
                 $name = $this->nameInput->getText();
                 $description = $this->descriptionInput->getText();
                 ($this->onSubmit)($name, $description);
                 $this->clearInputs();
+                return;
             }
-            return;
+            // If description field is active, let Enter pass through to create new line
         }
 
         // Handle Escape to cancel

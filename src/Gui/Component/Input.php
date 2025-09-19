@@ -68,13 +68,20 @@ final class Input implements GuiComponent
         $this->textEditor = TextEditor::fromString("");
     }
 
+    public function setActive(bool $active): void
+    {
+        $this->isActive = $active;
+    }
+
     public function build(): Widget
     {
         $lines = $this->textEditor->viewportLines(0, $this->textEditor->lineCount());
         $cursorPos = $this->textEditor->cursorPosition();
         $displayLines = [];
+
         foreach ($lines as $index => $line) {
-            if ($index === $cursorPos->y) {
+            if ($this->isActive && $index === $cursorPos->y) {
+                // Show cursor only when active
                 if ($line === "") {
                     $displayLines[] = Line::fromSpans(
                         Span::fromString("_")->style(Style::default()->bg(Colors::$WHITE)->fg(Colors::$BLACK)),
@@ -90,12 +97,19 @@ final class Input implements GuiComponent
                     );
                 }
             } else {
+                // No cursor when inactive
                 $displayLines[] = Line::fromString($line ?: " ");
             }
         }
+
+        $borderStyle = $this->isActive
+            ? Style::default()->fg(Colors::$GREEN)
+            : Style::default()->fg(Colors::$GREY);
+
         return BlockWidget::default()
             ->borders(Borders::ALL)
             ->borderType(BorderType::Rounded)
+            ->borderStyle($borderStyle)
             ->titles(Title::fromString($this->label))
             ->widget(
                 ParagraphWidget::fromText(
