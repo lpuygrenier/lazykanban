@@ -56,6 +56,15 @@ final class BoardSectionComponent implements GuiComponent
         $this->boardSelected = $selected;
     }
 
+    public function updateBoardFiles(array $boardFiles): void
+    {
+        $this->boardFiles = $boardFiles;
+        // Reset selection if it's out of bounds
+        if ($this->boardSelected >= count($this->boardFiles)) {
+            $this->boardSelected = max(0, count($this->boardFiles) - 1);
+        }
+    }
+
     public function moveUp(): void
     {
         if ($this->boardSelected > 0) {

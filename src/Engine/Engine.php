@@ -80,6 +80,11 @@ class Engine {
             $this->currentGuiComponent->setOnBoardSave(function() {
                 $this->saveCurrentBoard();
             });
+
+            // Set up board create callback
+            $this->currentGuiComponent->setOnBoardCreate(function(string $name, $editingBoard = null) {
+                $this->createBoard($name, $editingBoard);
+            });
         }
 
     }
@@ -151,6 +156,48 @@ class Engine {
         $this->logger->info('Board saved to: ' . $this->currentBoardFilename);
     }
 
+    private function createBoard(string $name, $editingBoard = null): void
+    {
+        // Generate a unique filename based on the board name
+        $filename = $this->generateBoardFilename($name);
+
+        // Create a new board
+        $newBoard = new Board();
+        $newBoard->id = rand(1, 10000); // Simple ID generation
+        $newBoard->name = $name;
+
+        // Save the new board
+        $this->fileService->export($newBoard, $filename);
+
+        // Switch to the new board
+        $this->switchToBoard($filename);
+
+        // Refresh board files list in the UI
+        $this->refreshBoardFiles();
+
+        $this->logger->info('Board created: ' . $name . ' (' . $filename . ')');
+    }
+
+    private function generateBoardFilename(string $name): string
+    {
+        // Sanitize the name for filename
+        $sanitized = preg_replace('/[^a-zA-Z0-9_-]/', '_', $name);
+        $sanitized = strtolower($sanitized);
+
+        // Check if file already exists and add number if needed
+        $baseFilename = $sanitized . '.json';
+        $counter = 1;
+        $filename = $baseFilename;
+
+        $boardDir = $this->fileService->getBoardDirectory();
+        while (file_exists($boardDir . '/' . $filename)) {
+            $filename = $sanitized . '_' . $counter . '.json';
+            $counter++;
+        }
+
+        return $filename;
+    }
+
     private function handleGlobalKeybindAction(string $layout): string {
         
     }
@@ -182,5 +229,29 @@ class Engine {
         }
 
         $this->logger->info("Successfully switched to board: {$newBoard->name}");
+    }
+
+    private function refreshBoardFiles(): void
+    {
+        $boardFiles = $this->fileService->listBoardFiles();
+        if ($this->currentGuiComponent instanceof KanbanPage) {
+            // We need to update the board files in the BoardSectionComponent
+            // For now, we'll recreate the component with updated files
+            $this->initializeBoardSection($boardFiles);
+        }
+    }
+
+    private function initializeBoardSection(array $boardFiles): void
+    {
+        if ($this->currentGuiComponent instanceof KanbanPage) {
+            // Get the current selected index from the existing component
+            $currentSelected = 0;
+            if (property_exists($this->currentGuiComponent, 'boardSectionComponent')) {
+                $currentSelected = $this->currentGuiComponent->getBoardSectionSelected();
+            }
+
+            // Update the board files in the component
+            $this->currentGuiComponent->updateBoardFiles($boardFiles, $currentSelected);
+        }
     }
 }

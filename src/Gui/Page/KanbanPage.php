@@ -13,6 +13,7 @@ use Lpuygrenier\Lazykanban\Gui\Component\TaskComponent;
 use Lpuygrenier\Lazykanban\Gui\Component\BoardComponent;
 use Lpuygrenier\Lazykanban\Gui\Component\BoardSectionComponent;
 use Lpuygrenier\Lazykanban\Gui\Component\TaskForm;
+use Lpuygrenier\Lazykanban\Gui\Component\BoardForm;
 use PhpTui\Tui\Extension\Core\Widget\GridWidget;
 use PhpTui\Tui\Extension\Core\Widget\Table\TableState;
 use PhpTui\Tui\Layout\Constraint;
@@ -27,10 +28,13 @@ final class KanbanPage implements GuiComponent
     private BoardComponent $boardComponent;
     private BoardSectionComponent $boardSectionComponent;
     private ?TaskForm $taskForm = null;
+    private ?BoardForm $boardForm = null;
     private bool $isEditingTask = false;
+    private bool $isEditingBoard = false;
     private string $activeComponent = 'task';
     private $onBoardSwitch = null;
     private $onBoardSave = null;
+    private $onBoardCreate = null;
 
     public function __construct(Board $board, array $boardFiles = [])
     {
@@ -46,6 +50,15 @@ final class KanbanPage implements GuiComponent
         });
         $this->taskForm->setOnCancel(function() {
             $this->cancelTaskForm();
+        });
+
+        // Initialize board form
+        $this->boardForm = new BoardForm();
+        $this->boardForm->setOnSubmit(function(string $name, $editingBoard = null) {
+            $this->submitBoard($name, $editingBoard);
+        });
+        $this->boardForm->setOnCancel(function() {
+            $this->cancelBoardForm();
         });
 
         // Set up board selection callback
@@ -64,6 +77,11 @@ final class KanbanPage implements GuiComponent
     public function setOnBoardSave(callable $callback): void
     {
         $this->onBoardSave = $callback;
+    }
+
+    public function setOnBoardCreate(callable $callback): void
+    {
+        $this->onBoardCreate = $callback;
     }
 
     public function updateBoard(Board $newBoard): void
@@ -99,6 +117,21 @@ final class KanbanPage implements GuiComponent
         $this->isEditingTask = false;
     }
 
+    private function submitBoard(string $name, $editingBoard = null): void
+    {
+        if (!empty($name)) {
+            if ($this->onBoardCreate !== null) {
+                ($this->onBoardCreate)($name, $editingBoard);
+            }
+        }
+        $this->isEditingBoard = false;
+    }
+
+    private function cancelBoardForm(): void
+    {
+        $this->isEditingBoard = false;
+    }
+
     private function getSelectedTask()
     {
         $allTasks = array_merge(
@@ -111,12 +144,28 @@ final class KanbanPage implements GuiComponent
         return isset($allTasks[$selectedIndex]) ? $allTasks[$selectedIndex]['task'] : null;
     }
 
+    public function getBoardSectionSelected(): int
+    {
+        return $this->boardSectionComponent->getSelected();
+    }
+
+    public function updateBoardFiles(array $boardFiles, int $selected = 0): void
+    {
+        $this->boardSectionComponent->updateBoardFiles($boardFiles);
+        $this->boardSectionComponent->setSelected($selected);
+    }
+
 
     public function build(): Widget
     {
         // Show task form if active
         if ($this->isEditingTask && $this->taskForm !== null) {
             return $this->taskForm->build();
+        }
+
+        // Show board form if active
+        if ($this->isEditingBoard && $this->boardForm !== null) {
+            return $this->boardForm->build();
         }
 
         $this->taskComponent->setActive($this->activeComponent === 'task');
@@ -156,6 +205,12 @@ final class KanbanPage implements GuiComponent
             return;
         }
 
+        // Handle board form if active
+        if ($this->isEditingBoard && $this->boardForm !== null) {
+            $this->boardForm->handleKeybindAction($keyboardAction);
+            return;
+        }
+
         $action = $keyboardAction->getAction();
         if ($action === null) {
             return;
@@ -163,8 +218,13 @@ final class KanbanPage implements GuiComponent
 
         switch ($action) {
             case 'create_task':
-                $this->taskForm->setCreateMode();
-                $this->isEditingTask = true;
+                if ($this->activeComponent === 'task') {
+                    $this->taskForm->setCreateMode();
+                    $this->isEditingTask = true;
+                } elseif ($this->activeComponent === 'boardsection') {
+                    $this->boardForm->setCreateMode();
+                    $this->isEditingBoard = true;
+                }
                 break;
             case 'select':
                 // Edit selected task
@@ -174,6 +234,9 @@ final class KanbanPage implements GuiComponent
                         $this->taskForm->setEditMode($selectedTask);
                         $this->isEditingTask = true;
                     }
+                } elseif ($this->activeComponent === 'boardsection') {
+                    // For now, board editing is not implemented as boards are just files
+                    // Could be extended to rename board files in the future
                 }
                 break;
             case 'move_left':

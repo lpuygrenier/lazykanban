@@ -113,6 +113,10 @@ class FileService {
         return array_values($boardFiles);
     }
 
+    public function getBoardDirectory(): string {
+        return $this->configService->getBoardSyncDirectory();
+    }
+
     private function buildFilePath(string $filename): string {
         $syncDirectory = $this->configService->getBoardSyncDirectory();
         return rtrim($syncDirectory, '/') . '/' . ltrim($filename, '/');
