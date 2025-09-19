@@ -30,6 +30,7 @@ final class KanbanPage implements GuiComponent
     private bool $isEditingTask = false;
     private string $activeComponent = 'task';
     private $onBoardSwitch = null;
+    private $onBoardSave = null;
 
     public function __construct(Board $board, array $boardFiles = [])
     {
@@ -60,6 +61,11 @@ final class KanbanPage implements GuiComponent
         $this->onBoardSwitch = $callback;
     }
 
+    public function setOnBoardSave(callable $callback): void
+    {
+        $this->onBoardSave = $callback;
+    }
+
     public function updateBoard(Board $newBoard): void
     {
         $this->board = $newBoard;
@@ -78,6 +84,11 @@ final class KanbanPage implements GuiComponent
                 $taskId = $this->board->getNextTaskId();
                 $task = new Task($taskId, $name, $description);
                 $this->board->add($task);
+            }
+
+            // Save changes to file
+            if ($this->onBoardSave !== null) {
+                ($this->onBoardSave)();
             }
         }
         $this->isEditingTask = false;
@@ -183,6 +194,10 @@ final class KanbanPage implements GuiComponent
             case 'delete_task':
                 if ($this->activeComponent === 'task') {
                     $this->taskComponent->handleKeybindAction($keyboardAction);
+                    // Save changes to file after move/delete operations
+                    if ($this->onBoardSave !== null) {
+                        ($this->onBoardSave)();
+                    }
                 }
                 break;
         }

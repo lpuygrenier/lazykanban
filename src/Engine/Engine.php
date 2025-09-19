@@ -39,6 +39,7 @@ class Engine {
     private Display $display;
     private GuiComponent $currentGuiComponent;
     public Board $board;
+    private string $currentBoardFilename;
 
     public function __construct(
         Logger $logger,
@@ -53,6 +54,7 @@ class Engine {
         $this->keybindService = $keybindService;
 
         // Load initial board
+        $this->currentBoardFilename = $defaultFilename;
         $this->board = $this->fileService->import($defaultFilename);
     }
 
@@ -72,6 +74,11 @@ class Engine {
         if ($this->currentGuiComponent instanceof KanbanPage) {
             $this->currentGuiComponent->setOnBoardSwitch(function(string $boardFile) {
                 $this->switchToBoard($boardFile);
+            });
+
+            // Set up board save callback
+            $this->currentGuiComponent->setOnBoardSave(function() {
+                $this->saveCurrentBoard();
             });
         }
 
@@ -137,6 +144,13 @@ class Engine {
 
         return 0;
     }
+
+    private function saveCurrentBoard(): void
+    {
+        $this->fileService->export($this->board, $this->currentBoardFilename);
+        $this->logger->info('Board saved to: ' . $this->currentBoardFilename);
+    }
+
     private function handleGlobalKeybindAction(string $layout): string {
         
     }
@@ -158,8 +172,9 @@ class Engine {
         // Load the new board
         $newBoard = $this->fileService->import($boardFile);
 
-        // Update the current board
+        // Update the current board and filename
         $this->board = $newBoard;
+        $this->currentBoardFilename = $boardFile;
 
         // Update the KanbanPage with the new board
         if ($this->currentGuiComponent instanceof KanbanPage) {

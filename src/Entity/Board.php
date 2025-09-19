@@ -56,7 +56,7 @@ class Board {
         if (empty($allTasks)) {
             return 1;
         }
-        return max(array_keys($allTasks)) + 1;
+        return max(array_keys($allTasks)) + 2;
     }
 
     public function update(Task $task, string $newName, string $newDescription): void
