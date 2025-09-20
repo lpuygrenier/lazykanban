@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Lpuygrenier\Lazykanban\Gui\Component;
 
+use Lpuygrenier\Lazykanban\Gui\Constant\Widgets;
 use Lpuygrenier\Lazykanban\Gui\KeyboardAction;
 use Lpuygrenier\Lazykanban\Gui\GuiComponent;
 use PhpTui\Tui\Extension\Core\Widget\GridWidget;
+use PhpTui\Tui\Extension\Core\Widget\ParagraphWidget;
 use PhpTui\Tui\Layout\Constraint;
+use PhpTui\Tui\Text\Text;
 use PhpTui\Tui\Widget\Direction;
 use PhpTui\Tui\Widget\Widget;
 use PhpTui\Term\Event\CodedKeyEvent;
@@ -76,7 +79,7 @@ final class TaskForm implements GuiComponent
         $this->nameInput->setActive($this->activeField === 'name');
         $this->descriptionInput->setActive($this->activeField === 'description');
 
-        return GridWidget::default()
+        $content = GridWidget::default()
             ->direction(Direction::Vertical)
             ->constraints(
                 Constraint::length(3),
@@ -85,6 +88,30 @@ final class TaskForm implements GuiComponent
             ->widgets(
                 $this->nameInput->build(),
                 $this->descriptionInput->build()
+            );
+
+        return GridWidget::default()
+            ->direction(Direction::Vertical)
+            ->constraints(
+                Constraint::percentage(30), // top
+                Constraint::percentage(40), // content
+                Constraint::percentage(30)  // bottom
+            )
+            ->widgets(
+                Widgets::$EMPTY,
+                GridWidget::default()
+                    ->direction(Direction::Horizontal)
+                    ->constraints(
+                        Constraint::percentage(20), // left
+                        Constraint::percentage(60), // content
+                        Constraint::percentage(20)  // right
+                    )
+                    ->widgets(
+                        Widgets::$EMPTY,
+                        $content,
+                        Widgets::$EMPTY
+                    ),
+                Widgets::$EMPTY
             );
     }
 
