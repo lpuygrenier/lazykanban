@@ -1,6 +1,7 @@
 <?php
 namespace Lpuygrenier\Lazykanban\Engine;
 
+use Lpuygrenier\Lazykanban\Gui\Component\HelpComponent;
 use Lpuygrenier\Lazykanban\Gui\Component\Input;
 use Lpuygrenier\Lazykanban\Gui\GuiComponent;
 use Lpuygrenier\Lazykanban\Gui\KeyboardAction;
@@ -40,6 +41,7 @@ class Engine {
     private Terminal $terminal;
     private Display $display;
     private GuiComponent $currentGuiComponent;
+    private ?GuiComponent $previousGuiComponent = null;
     public Board $board;
     private string $currentBoardFilename;
 
@@ -222,8 +224,17 @@ class Engine {
         $action = $keyboardAction->getAction();
         if ($action === Keybinds::ACTION_HELP) {
             $this->logger->info(Keybinds::ACTION_HELP);
-            // TODO: Display help information
+            $this->showHelp();
         }
+    }
+
+    private function showHelp(): void {
+        $keybinds = $this->currentGuiComponent->getKeybindActions();
+        $this->previousGuiComponent = $this->currentGuiComponent;
+        $this->currentGuiComponent = new HelpComponent($keybinds, function() {
+            $this->currentGuiComponent = $this->previousGuiComponent;
+            $this->previousGuiComponent = null;
+        });
     }
 
     private function buildLayout(GuiComponent $guiComponent): Widget {
