@@ -107,4 +107,9 @@ final class BoardForm implements GuiComponent
             $this->nameInput->handleKeybindAction($keyboardAction);
         }
     }
+
+    public function getKeybindActions(): array
+    {
+        return [];
+    }
 }

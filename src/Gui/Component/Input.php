@@ -152,4 +152,8 @@ final class Input implements GuiComponent
         }
     }
 
+    public function getKeybindActions(): array
+    {
+        return [];
+    }
 }

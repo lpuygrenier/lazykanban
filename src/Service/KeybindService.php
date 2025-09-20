@@ -4,6 +4,7 @@ namespace Lpuygrenier\Lazykanban\Service;
 
 use Monolog\Logger;
 use Lpuygrenier\Lazykanban\Gui\KeyboardAction;
+use Lpuygrenier\Lazykanban\Constants\Keybinds;
 use PhpTui\Term\Event;
 
 class KeybindService {
@@ -38,17 +39,7 @@ class KeybindService {
     }
 
     private function setDefaultKeybinds(): void {
-        $this->keybinds = [
-            'quit' => 'q',
-            'move_up' => 'k',
-            'move_down' => 'j',
-            'move_left' => 'h',
-            'move_right' => 'l',
-            'select' => 'e',
-            'move_task' => 'm',
-            'create_task' => 'n',
-            'delete_task' => 'd',
-        ];
+        $this->keybinds = Keybinds::getDefaultKeybinds();
         $this->logger->info('[KeybindService] - Using default keybinds');
     }
 

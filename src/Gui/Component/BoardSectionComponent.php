@@ -8,6 +8,7 @@ use Lpuygrenier\Lazykanban\Gui\Constant\Colors;
 use Lpuygrenier\Lazykanban\Gui\Constant\Styles;
 use Lpuygrenier\Lazykanban\Gui\KeyboardAction;
 use Lpuygrenier\Lazykanban\Gui\GuiComponent;
+use Lpuygrenier\Lazykanban\Constants\Keybinds;
 use PhpTui\Tui\Extension\Core\Widget\BlockWidget;
 use PhpTui\Tui\Extension\Core\Widget\Paragraph\Wrap;
 use PhpTui\Tui\Extension\Core\Widget\ParagraphWidget;
@@ -138,12 +139,21 @@ final class BoardSectionComponent implements GuiComponent
         }
 
         switch ($action) {
-            case 'move_up':
+            case Keybinds::ACTION_MOVE_UP:
                 $this->moveUp();
                 break;
-            case 'move_down':
+            case Keybinds::ACTION_MOVE_DOWN:
                 $this->moveDown();
                 break;
         }
+    }
+
+    public function getKeybindActions(): array
+    {
+        $descriptions = Keybinds::getDescriptions();
+        return [
+            new KeyboardAction(Keybinds::ACTION_MOVE_UP, null, $descriptions[Keybinds::ACTION_MOVE_UP]),
+            new KeyboardAction(Keybinds::ACTION_MOVE_DOWN, null, $descriptions[Keybinds::ACTION_MOVE_DOWN]),
+        ];
     }
 }

@@ -112,4 +112,9 @@ final class BoardComponent implements GuiComponent
                 )->wrap(Wrap::Word)
             );
     }
+
+    public function getKeybindActions(): array
+    {
+        return [];
+    }
 }

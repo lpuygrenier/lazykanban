@@ -9,6 +9,7 @@ use Lpuygrenier\Lazykanban\Entity\Task;
 use Lpuygrenier\Lazykanban\Gui\Constant\Colors;
 use Lpuygrenier\Lazykanban\Gui\KeyboardAction;
 use Lpuygrenier\Lazykanban\Gui\GuiComponent;
+use Lpuygrenier\Lazykanban\Constants\Keybinds;
 use Lpuygrenier\Lazykanban\Gui\Component\TaskComponent;
 use Lpuygrenier\Lazykanban\Gui\Component\BoardComponent;
 use Lpuygrenier\Lazykanban\Gui\Component\BoardSectionComponent;
@@ -217,7 +218,7 @@ final class KanbanPage implements GuiComponent
         }
 
         switch ($action) {
-            case 'create_task':
+            case Keybinds::ACTION_CREATE_TASK:
                 if ($this->activeComponent === 'task') {
                     $this->taskForm->setCreateMode();
                     $this->isEditingTask = true;
@@ -226,7 +227,7 @@ final class KanbanPage implements GuiComponent
                     $this->isEditingBoard = true;
                 }
                 break;
-            case 'select':
+            case Keybinds::ACTION_SELECT:
                 // Edit selected task
                 if ($this->activeComponent === 'task') {
                     $selectedTask = $this->getSelectedTask();
@@ -239,22 +240,22 @@ final class KanbanPage implements GuiComponent
                     // Could be extended to rename board files in the future
                 }
                 break;
-            case 'move_left':
+            case Keybinds::ACTION_MOVE_LEFT:
                 $this->activeComponent = 'task';
                 break;
-            case 'move_right':
+            case Keybinds::ACTION_MOVE_RIGHT:
                 $this->activeComponent = 'boardsection';
                 break;
-            case 'move_up':
-            case 'move_down':
+            case Keybinds::ACTION_MOVE_UP:
+            case Keybinds::ACTION_MOVE_DOWN:
                 if ($this->activeComponent === 'task') {
                     $this->taskComponent->handleKeybindAction($keyboardAction);
                 } elseif ($this->activeComponent === 'boardsection') {
                     $this->boardSectionComponent->handleKeybindAction($keyboardAction);
                 }
                 break;
-            case 'move_task':
-            case 'delete_task':
+            case Keybinds::ACTION_MOVE_TASK:
+            case Keybinds::ACTION_DELETE_TASK:
                 if ($this->activeComponent === 'task') {
                     $this->taskComponent->handleKeybindAction($keyboardAction);
                     // Save changes to file after move/delete operations
@@ -264,5 +265,20 @@ final class KanbanPage implements GuiComponent
                 }
                 break;
         }
+    }
+
+    public function getKeybindActions(): array
+    {
+        $descriptions = Keybinds::getDescriptions();
+        return [
+            new KeyboardAction(Keybinds::ACTION_CREATE_TASK, null, $descriptions[Keybinds::ACTION_CREATE_TASK]),
+            new KeyboardAction(Keybinds::ACTION_SELECT, null, $descriptions[Keybinds::ACTION_SELECT]),
+            new KeyboardAction(Keybinds::ACTION_MOVE_LEFT, null, $descriptions[Keybinds::ACTION_MOVE_LEFT]),
+            new KeyboardAction(Keybinds::ACTION_MOVE_RIGHT, null, $descriptions[Keybinds::ACTION_MOVE_RIGHT]),
+            new KeyboardAction(Keybinds::ACTION_MOVE_UP, null, $descriptions[Keybinds::ACTION_MOVE_UP]),
+            new KeyboardAction(Keybinds::ACTION_MOVE_DOWN, null, $descriptions[Keybinds::ACTION_MOVE_DOWN]),
+            new KeyboardAction(Keybinds::ACTION_MOVE_TASK, null, $descriptions[Keybinds::ACTION_MOVE_TASK]),
+            new KeyboardAction(Keybinds::ACTION_DELETE_TASK, null, $descriptions[Keybinds::ACTION_DELETE_TASK]),
+        ];
     }
 }

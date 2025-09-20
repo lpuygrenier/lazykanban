@@ -126,4 +126,9 @@ final class TaskForm implements GuiComponent
             $this->descriptionInput->handleKeybindAction($keyboardAction);
         }
     }
+
+    public function getKeybindActions(): array
+    {
+        return [];
+    }
 }

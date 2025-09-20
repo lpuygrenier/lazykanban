@@ -10,6 +10,7 @@ use Lpuygrenier\Lazykanban\Gui\Constant\Colors;
 use Lpuygrenier\Lazykanban\Gui\Constant\Styles;
 use Lpuygrenier\Lazykanban\Gui\KeyboardAction;
 use Lpuygrenier\Lazykanban\Gui\GuiComponent;
+use Lpuygrenier\Lazykanban\Constants\Keybinds;
 use PhpTui\Tui\Color\Color;
 use PhpTui\Tui\Extension\Core\Widget\BlockWidget;
 use PhpTui\Tui\Extension\Core\Widget\GridWidget;
@@ -85,19 +86,30 @@ final class TaskComponent implements GuiComponent
         }
 
         switch ($action) {
-            case 'move_up':
+            case Keybinds::ACTION_MOVE_UP:
                 $this->moveUp();
                 break;
-            case 'move_down':
+            case Keybinds::ACTION_MOVE_DOWN:
                 $this->moveDown();
                 break;
-            case 'move_task':
+            case Keybinds::ACTION_MOVE_TASK:
                 $this->moveSelectedTask();
                 break;
-            case 'delete_task':
+            case Keybinds::ACTION_DELETE_TASK:
                 $this->deleteSelectedTask();
                 break;
         }
+    }
+
+    public function getKeybindActions(): array
+    {
+        $descriptions = Keybinds::getDescriptions();
+        return [
+            new KeyboardAction(Keybinds::ACTION_MOVE_UP, null, $descriptions[Keybinds::ACTION_MOVE_UP]),
+            new KeyboardAction(Keybinds::ACTION_MOVE_DOWN, null, $descriptions[Keybinds::ACTION_MOVE_DOWN]),
+            new KeyboardAction(Keybinds::ACTION_MOVE_TASK, null, $descriptions[Keybinds::ACTION_MOVE_TASK]),
+            new KeyboardAction(Keybinds::ACTION_DELETE_TASK, null, $descriptions[Keybinds::ACTION_DELETE_TASK]),
+        ];
     }
 
     public function moveSelectedTask(): void
@@ -154,8 +166,8 @@ final class TaskComponent implements GuiComponent
             ->highlightStyle($highlightStyle)
             ->widths(
                 Constraint::percentage(10),
-                Constraint::percentage(50),
-                Constraint::percentage(30),
+                Constraint::percentage(70),
+                Constraint::percentage(20),
             )
             ->header(
                 TableRow::fromCells(
@@ -170,8 +182,20 @@ final class TaskComponent implements GuiComponent
                 return TableRow::fromCells(
                     TableCell::fromString((string)$task->getId()),
                     TableCell::fromString($task->getName()),
-                    TableCell::fromString($status)
+                    TableCell::fromString($this->parseStatus($status)),
                 );
             }, $allTasks));
+    }
+
+    private function parseStatus(string $status): string {
+        switch ($status) {
+            case 'TODO':
+                return Styles::$TODO_SYMBOL;
+            case 'IN_PROGRESS':
+                return Styles::$IN_PROGRESS_SYMBOL;
+            case 'DONE':
+                return Styles::$DONE_SYMBOL;
+        }
+        return '';
     }
 }

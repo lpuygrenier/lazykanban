@@ -12,4 +12,6 @@ interface GuiComponent
     public function build(): Widget;
 
     public function handleKeybindAction(KeyboardAction $keyboardAction): void;
+
+    public function getKeybindActions(): array;
 }

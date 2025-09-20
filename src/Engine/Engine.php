@@ -4,6 +4,7 @@ namespace Lpuygrenier\Lazykanban\Engine;
 use Lpuygrenier\Lazykanban\Gui\Component\Input;
 use Lpuygrenier\Lazykanban\Gui\GuiComponent;
 use Lpuygrenier\Lazykanban\Gui\KeyboardAction;
+use Lpuygrenier\Lazykanban\Constants\Keybinds;
 use Lpuygrenier\Lazykanban\Service\FileService;
 use Lpuygrenier\Lazykanban\Service\ConfigService;
 use Lpuygrenier\Lazykanban\Service\KeybindService;
@@ -12,6 +13,7 @@ use Monolog\Logger;
 use Lpuygrenier\Lazykanban\Entity\Board;
 use PhpTui\Term\Actions;
 use PhpTui\Term\ClearType;
+use PhpTui\Term\Event;
 use PhpTui\Term\Event\CharKeyEvent;
 use PhpTui\Term\Event\CodedKeyEvent;
 use PhpTui\Term\KeyCode;
@@ -114,29 +116,22 @@ class Engine {
         while (true) {
             // Handle events sent to the terminal
             while (null !== $event = $this->terminal->events()->next()) {
-                /** Global Keybind Action */
-                if ($event instanceof CharKeyEvent) {
-                    if ($event->modifiers === KeyModifiers::CONTROL && $event->char === 'c') {
-                        // Check for quit keybind
-                        $this->logger->info('Quit key pressed, exiting application');
-                        break 2;
-                    }
+                if ($this->isQuitEvent($event)) {
+                    $this->logger->info('Quit key pressed, exiting application');
+                    break 2;
                 }
 
-                /** Local Keybind Action */
-                if ($event instanceof CharKeyEvent) {
-                    $keyboardAction = $this->keybindService->getActionForKey($event->char, $event);
-                    $this->currentGuiComponent->handleKeybindAction($keyboardAction);
-                } else if ($event instanceof CodedKeyEvent) {
-                    $keyboardAction = $this->keybindService->getActionForKey("", $event);
+                $keyboardAction = $this->getKeyboardActionFromEvent($event);
+                if ($this->isGlobalAction($keyboardAction)) {
+                    $this->handleGlobalKeybindAction($keyboardAction);
+                } else {
                     $this->currentGuiComponent->handleKeybindAction($keyboardAction);
                 }
-
             }
 
             /** Render the app */
             $this->display->draw($this->buildLayout($this->currentGuiComponent));
-            
+
             // sleep for Xms - note that it's encouraged to implement apps
             // using an async library such as Amp or React
             usleep(50_000);
@@ -148,6 +143,27 @@ class Engine {
         $this->terminal->execute(Actions::disableMouseCapture());
 
         return 0;
+    }
+
+    private function isQuitEvent(Event $event): bool
+    {
+        return $event instanceof CharKeyEvent && $event->modifiers === KeyModifiers::CONTROL && $event->char === 'c';
+    }
+
+    private function getKeyboardActionFromEvent(Event $event): KeyboardAction
+    {
+        if ($event instanceof CharKeyEvent) {
+            return $this->keybindService->getActionForKey($event->char, $event);
+        } elseif ($event instanceof CodedKeyEvent) {
+            return $this->keybindService->getActionForKey("", $event);
+        }
+        return new KeyboardAction(null, $event);
+    }
+
+    private function isGlobalAction(KeyboardAction $keyboardAction): bool
+    {
+        $action = $keyboardAction->getAction();
+        return $action !== null && in_array($action, [Keybinds::ACTION_HELP]);
     }
 
     private function saveCurrentBoard(): void
@@ -198,8 +214,16 @@ class Engine {
         return $filename;
     }
 
-    private function handleGlobalKeybindAction(string $layout): string {
-        
+    private function handleGlobalKeybindAction(KeyboardAction $keyboardAction): void {
+        if ($keyboardAction === null) {
+            return;
+        }
+
+        $action = $keyboardAction->getAction();
+        if ($action === Keybinds::ACTION_HELP) {
+            $this->logger->info(Keybinds::ACTION_HELP);
+            // TODO: Display help information
+        }
     }
 
     private function buildLayout(GuiComponent $guiComponent): Widget {
