@@ -26,6 +26,7 @@ final class BoardComponent implements GuiComponent
 {
     private Board $board;
     private bool $isActive = false;
+    private ?int $selectedTaskIndex = null;
 
     public function __construct(Board $board)
     {
@@ -35,6 +36,11 @@ final class BoardComponent implements GuiComponent
     public function setActive(bool $active): void
     {
         $this->isActive = $active;
+    }
+
+    public function setSelectedTaskIndex(?int $index): void
+    {
+        $this->selectedTaskIndex = $index;
     }
 
     public function build(): Widget
@@ -59,6 +65,7 @@ final class BoardComponent implements GuiComponent
     }
 
     private function kanbanBoard(): Widget {
+        $globalIndex = 0;
         return GridWidget::default()
             ->direction(Direction::Horizontal)
             ->constraints(
@@ -67,15 +74,19 @@ final class BoardComponent implements GuiComponent
                 Constraint::percentage(33),
             )
             ->widgets(
-                $this->taskColumn('TODO', $this->board->todo),
-                $this->taskColumn('IN PROGRESS', $this->board->inProgress),
-                $this->taskColumn('DONE', $this->board->done)
+                $this->taskColumn('TODO', $this->board->todo, $globalIndex),
+                $this->taskColumn('IN PROGRESS', $this->board->inProgress, $globalIndex),
+                $this->taskColumn('DONE', $this->board->done, $globalIndex)
             );
     }
 
-    private function taskColumn(string $title, array $tasks): Widget
+    private function taskColumn(string $title, array $tasks, &$globalIndex): Widget
     {
-        $taskWidgets = array_map(fn($task) => $this->taskCard($task), $tasks);
+        $taskWidgets = [];
+        foreach ($tasks as $task) {
+            $taskWidgets[] = $this->taskCard($task, $globalIndex);
+            $globalIndex++;
+        }
 
         // If no tasks, show empty message
         if (empty($taskWidgets)) {
@@ -97,7 +108,7 @@ final class BoardComponent implements GuiComponent
             ->widget($columnContent);
     }
 
-    private function taskCard($task): Widget
+    private function taskCard($task, int $index): Widget
     {
         $content = sprintf(
             "%d. %s",
@@ -105,11 +116,13 @@ final class BoardComponent implements GuiComponent
             $task->getName()
         );
 
+        $style = $index === $this->selectedTaskIndex ? Style::default()->fg(Colors::$GREEN) : Style::default();
+
         return BlockWidget::default()
             ->widget(
                 ParagraphWidget::fromText(
                     Text::parse($content)
-                )->wrap(Wrap::Word)
+                )->style($style)->wrap(Wrap::Word)
             );
     }
 

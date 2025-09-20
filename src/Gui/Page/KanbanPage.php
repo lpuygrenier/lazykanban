@@ -171,6 +171,7 @@ final class KanbanPage implements GuiComponent
 
         $this->taskComponent->setActive($this->activeComponent === 'task');
         $this->boardComponent->setActive($this->activeComponent === 'board');
+        $this->boardComponent->setSelectedTaskIndex($this->taskComponent->getState()->selected);
         $this->boardSectionComponent->setActive($this->activeComponent === 'boardsection');
 
         $sideContent = GridWidget::default()
