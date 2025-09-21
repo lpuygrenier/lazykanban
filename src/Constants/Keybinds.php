@@ -14,6 +14,7 @@ class Keybinds
     const ACTION_CREATE_TASK = 'create_task';
     const ACTION_MOVE_TASK = 'move_task';
     const ACTION_DELETE_TASK = 'delete_task';
+    const ACTION_SEARCH = 'search';
 
     public static function getDescriptions(): array
     {
@@ -28,6 +29,7 @@ class Keybinds
             self::ACTION_CREATE_TASK => 'Create a new task',
             self::ACTION_MOVE_TASK => 'Move task to next status',
             self::ACTION_DELETE_TASK => 'Delete selected task',
+            self::ACTION_SEARCH => 'Toggle search mode',
         ];
     }
 
@@ -44,6 +46,7 @@ class Keybinds
             self::ACTION_CREATE_TASK => 'n',
             self::ACTION_MOVE_TASK => 'm',
             self::ACTION_DELETE_TASK => 'd',
+            self::ACTION_SEARCH => '/',
         ];
     }
 

@@ -14,7 +14,7 @@ use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 use Symfony\Component\Config\FileLocator;
 
 define('PROJECT_ROOT', realpath(__DIR__ . '/../'));
-
+define('APP_VERS', '0.0.1');
 final class App
 {
     public static function new(?Terminal $terminal = null, ?Backend $backend = null): Engine

@@ -3,6 +3,7 @@ namespace Lpuygrenier\Lazykanban\Engine;
 
 use Lpuygrenier\Lazykanban\Gui\Component\HelpComponent;
 use Lpuygrenier\Lazykanban\Gui\Component\Input;
+use Lpuygrenier\Lazykanban\Gui\Component\StatusBar;
 use Lpuygrenier\Lazykanban\Gui\GuiComponent;
 use Lpuygrenier\Lazykanban\Gui\KeyboardAction;
 use Lpuygrenier\Lazykanban\Constants\Keybinds;
@@ -42,6 +43,7 @@ class Engine {
     private Display $display;
     private GuiComponent $currentGuiComponent;
     private ?GuiComponent $previousGuiComponent = null;
+    private StatusBar $statusBar;
     public Board $board;
     private string $currentBoardFilename;
 
@@ -52,6 +54,8 @@ class Engine {
         KeybindService $keybindService,
         string $defaultFilename = 'board.json'
     ) {
+        $this->statusBar = new StatusBar();
+
         $this->logger = $logger;
         $this->fileService = $fileService;
         $this->configService = $configService;
@@ -242,9 +246,11 @@ class Engine {
             ->direction(Direction::Vertical)
             ->constraints(
                 Constraint::percentage(100),
+                Constraint::min(1),
             )
             ->widgets(
                 $guiComponent->build(),
+                $this->statusBar->build(),
             );
     }
 
