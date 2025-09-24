@@ -6,6 +6,8 @@ namespace Lpuygrenier\Lazykanban\Gui\Component;
 
 use Lpuygrenier\Lazykanban\Entity\Board;
 use Lpuygrenier\Lazykanban\Entity\Status;
+use Lpuygrenier\Lazykanban\Gui\Common\IInteractive;
+use Lpuygrenier\Lazykanban\Gui\Common\IKeybindProvider;
 use Lpuygrenier\Lazykanban\Gui\Constant\Colors;
 use Lpuygrenier\Lazykanban\Gui\Constant\Styles;
 use Lpuygrenier\Lazykanban\Gui\Common\KeyboardAction;
@@ -29,27 +31,44 @@ use PhpTui\Tui\Widget\Borders;
 use PhpTui\Tui\Widget\BorderType;
 use PhpTui\Tui\Widget\Widget;
 
-final class TaskComponent implements IGuiComponent, IFilterable
+final class TaskComponent extends TableComponent implements IGuiComponent, IFilterable
 {
     private Board $board;
-    private TableState $state;
-    private bool $isActive = false;
     private mixed $filter = null;
 
     public function __construct(Board $board, TableState $state)
     {
+        parent::__construct($state, 'Tasks');
         $this->board = $board;
-        $this->state = $state;
-    }
-
-    public function setActive(bool $active): void
-    {
-        $this->isActive = $active;
     }
 
     public function getState(): TableState
     {
         return $this->state;
+    }
+
+    protected function getHeaders(): array
+    {
+        return ['ID', 'Task', 'Status'];
+    }
+
+    protected function getRows(): array
+    {
+        $filteredTasks = $this->getFilteredItems();
+        return array_map(function (array $taskData) {
+            $task = $taskData['task'];
+            $status = $taskData['status'];
+            return TableRow::fromCells(
+                TableCell::fromString((string)$task->getId()),
+                TableCell::fromString($task->getName()),
+                TableCell::fromString($this->parseStatus($status)),
+            );
+        }, $filteredTasks);
+    }
+
+    protected function getWidths(): array
+    {
+        return [10, 70, 20];
     }
 
     public function moveUp(): void
@@ -67,17 +86,7 @@ final class TaskComponent implements IGuiComponent, IFilterable
         }
     }
 
-    public function build(): Widget
-    {
-        $widget = BlockWidget::default()
-            ->borders(Borders::ALL)
-            ->borderType(BorderType::Rounded)
-            ->borderStyle(Style::default()->fg($this->isActive ? Colors::$GREEN : Colors::$GREY))
-            ->titles(Title::fromString('Tasks'))
-            ->widget($this->taskTable());
 
-        return $widget;
-    }
 
     public function handleKeybindAction(KeyboardAction $keyboardAction): void
     {
@@ -171,37 +180,7 @@ final class TaskComponent implements IGuiComponent, IFilterable
         }
     }
 
-    private function taskTable(): TableWidget
-    {
-        // Get filtered tasks
-        $filteredTasks = $this->getFilteredItems();
-        $highlightStyle = $this->isActive ? Styles::$HIGHLIGHTED_STYLE : Style::default();
-        return TableWidget::default()
-            ->state($this->state)
-            ->highlightSymbol(Styles::$HIGHLIGHTED_SYMBOL)
-            ->highlightStyle($highlightStyle)
-            ->widths(
-                Constraint::percentage(10),
-                Constraint::percentage(70),
-                Constraint::percentage(20),
-            )
-            ->header(
-                TableRow::fromCells(
-                    TableCell::fromString('ID'),
-                    TableCell::fromString('Task'),
-                    TableCell::fromString('Status'),
-                )
-            )
-            ->rows(...array_map(function (array $taskData) {
-                $task = $taskData['task'];
-                $status = $taskData['status'];
-                return TableRow::fromCells(
-                    TableCell::fromString((string)$task->getId()),
-                    TableCell::fromString($task->getName()),
-                    TableCell::fromString($this->parseStatus($status)),
-                );
-            }, $filteredTasks));
-    }
+
 
     private function parseStatus(string $status): string {
         switch ($status) {

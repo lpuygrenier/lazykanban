@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Lpuygrenier\Lazykanban\Gui\Component;
 
+use Lpuygrenier\Lazykanban\Gui\Common\IInteractive;
+use Lpuygrenier\Lazykanban\Gui\Common\IKeybindProvider;
 use Lpuygrenier\Lazykanban\Gui\Constant\Colors;
 use Lpuygrenier\Lazykanban\Gui\Constant\Styles;
 use Lpuygrenier\Lazykanban\Gui\Common\KeyboardAction;
@@ -25,18 +27,16 @@ use PhpTui\Tui\Widget\Borders;
 use PhpTui\Tui\Widget\BorderType;
 use PhpTui\Tui\Widget\Widget;
 
-final class BoardSectionComponent implements IGuiComponent, IFilterable
+final class BoardSectionComponent extends TableComponent implements IInteractive, IKeybindProvider, IFilterable
 {
     private array $boardFiles;
-    private int $boardSelected;
-    private bool $isActive = false;
-    private $onBoardSelected = null;
     private mixed $filter = null;
+    private $onBoardSelected = null;
 
     public function __construct(array $boardFiles, int $boardSelected)
     {
+        parent::__construct(new TableState(selected: $boardSelected), 'Boards');
         $this->boardFiles = $boardFiles;
-        $this->boardSelected = $boardSelected;
     }
 
     public function setOnBoardSelected(callable $callback): void
@@ -51,47 +51,32 @@ final class BoardSectionComponent implements IGuiComponent, IFilterable
 
     public function getSelected(): int
     {
-        return $this->boardSelected;
+        return $this->state->selected;
     }
 
     public function setSelected(int $selected): void
     {
-        $this->boardSelected = $selected;
+        $this->state->selected = $selected;
     }
 
-    public function updateBoardFiles(array $boardFiles): void
+    protected function getHeaders(): array
     {
-        $this->boardFiles = $boardFiles;
-        // Reset selection if it's out of bounds
-        $filteredCount = count($this->getFilteredItems());
-        if ($this->boardSelected >= $filteredCount) {
-            $this->boardSelected = max(0, $filteredCount - 1);
-        }
+        return []; 
     }
 
-    public function moveUp(): void
+    protected function getRows(): array
     {
-        if ($this->boardSelected > 0) {
-            $this->boardSelected--;
-            $this->triggerBoardSelection();
-        }
+        $filteredFiles = $this->getFilteredItems();
+        return array_map(function ($file) {
+            return TableRow::fromCells(
+                TableCell::fromString($file)
+            );
+        }, $filteredFiles);
     }
 
-    public function moveDown(): void
+    protected function getWidths(): array
     {
-        $filteredCount = count($this->getFilteredItems());
-        if ($this->boardSelected < $filteredCount - 1) {
-            $this->boardSelected++;
-            $this->triggerBoardSelection();
-        }
-    }
-
-    private function triggerBoardSelection(): void
-    {
-        $filteredItems = $this->getFilteredItems();
-        if ($this->onBoardSelected !== null && isset($filteredItems[$this->boardSelected])) {
-            ($this->onBoardSelected)($filteredItems[$this->boardSelected]);
-        }
+        return [100];
     }
 
     public function build(): Widget
@@ -110,32 +95,45 @@ final class BoardSectionComponent implements IGuiComponent, IFilterable
                 );
         }
 
-        $boardRows = array_map(function ($file) {
-            return TableRow::fromCells(
-                TableCell::fromString($file)
-            );
-        }, $filteredFiles);
-
-        $boardState = new TableState(selected: $this->boardSelected);
-
-        $highlightStyle = $this->isActive ? Styles::$HIGHLIGHTED_STYLE : Style::default();
-
-        $widget = BlockWidget::default()
-            ->borders(Borders::ALL)
-            ->borderType(BorderType::Rounded)
-            ->borderStyle(Style::default()->fg($this->isActive ? Colors::$GREEN : Colors::$GREY))
-            ->titles(Title::fromString('Boards'))
-            ->widget(
-                TableWidget::default()
-                    ->state($boardState)
-                    ->highlightSymbol(Styles::$HIGHLIGHTED_SYMBOL)
-                    ->highlightStyle($highlightStyle)
-                    ->widths(Constraint::percentage(100))
-                    ->rows(...$boardRows)
-            );
-
-        return $widget;
+        return parent::build();
     }
+
+    public function updateBoardFiles(array $boardFiles): void
+    {
+        $this->boardFiles = $boardFiles;
+        // Reset selection if it's out of bounds
+        $filteredCount = count($this->getFilteredItems());
+        if ($this->state->selected >= $filteredCount) {
+            $this->state->selected = max(0, $filteredCount - 1);
+        }
+    }
+
+    public function moveUp(): void
+    {
+        if ($this->state->selected > 0) {
+            $this->state->selected--;
+            $this->triggerBoardSelection();
+        }
+    }
+
+    public function moveDown(): void
+    {
+        $filteredCount = count($this->getFilteredItems());
+        if ($this->state->selected < $filteredCount - 1) {
+            $this->state->selected++;
+            $this->triggerBoardSelection();
+        }
+    }
+
+    private function triggerBoardSelection(): void
+    {
+        $filteredItems = $this->getFilteredItems();
+        if ($this->onBoardSelected !== null && isset($filteredItems[$this->state->selected])) {
+            ($this->onBoardSelected)($filteredItems[$this->state->selected]);
+        }
+    }
+
+
 
     public function handleKeybindAction(KeyboardAction $keyboardAction): void
     {
