@@ -7,7 +7,7 @@ namespace Lpuygrenier\Lazykanban\Gui\Component;
 use Lpuygrenier\Lazykanban\Constants\Keybinds;
 use Lpuygrenier\Lazykanban\Gui\Constant\Colors;
 use Lpuygrenier\Lazykanban\Gui\Constant\Widgets;
-use Lpuygrenier\Lazykanban\Gui\KeyboardAction;
+use Lpuygrenier\Lazykanban\Gui\Common\KeyboardAction;
 use Lpuygrenier\Lazykanban\Gui\Common\IGuiComponent;
 use PhpTui\Tui\Extension\Core\Widget\BlockWidget;
 use PhpTui\Tui\Extension\Core\Widget\GridWidget;

@@ -5,7 +5,7 @@ namespace Lpuygrenier\Lazykanban\Gui\Component;
 
 
 use Lpuygrenier\Lazykanban\Gui\Common\IGuiComponent;
-use Lpuygrenier\Lazykanban\Gui\KeyboardAction;
+use Lpuygrenier\Lazykanban\Gui\Common\KeyboardAction;
 use PhpTui\Tui\Extension\Core\Widget\GridWidget;
 use PhpTui\Tui\Extension\Core\Widget\ParagraphWidget;
 use PhpTui\Tui\Layout\Constraint;

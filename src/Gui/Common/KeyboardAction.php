@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Lpuygrenier\Lazykanban\Gui;
+namespace Lpuygrenier\Lazykanban\Gui\Common;
 
 use PhpTui\Term\Event;
 use Lpuygrenier\Lazykanban\Constants\Keybinds;

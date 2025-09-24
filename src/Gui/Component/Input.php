@@ -8,7 +8,7 @@ use Lpuygrenier\Lazykanban\Entity\Board;
 use Lpuygrenier\Lazykanban\Entity\Status;
 use Lpuygrenier\Lazykanban\Entity\Task;
 use Lpuygrenier\Lazykanban\Gui\Component\TextArea\TextEditor;
-use Lpuygrenier\Lazykanban\Gui\KeyboardAction;
+use Lpuygrenier\Lazykanban\Gui\Common\KeyboardAction;
 use Monolog\Logger;
 use PhpTui\Term\Event;
 use PhpTui\Term\Event\CharKeyEvent;

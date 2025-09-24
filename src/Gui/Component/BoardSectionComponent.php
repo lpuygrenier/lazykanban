@@ -6,7 +6,7 @@ namespace Lpuygrenier\Lazykanban\Gui\Component;
 
 use Lpuygrenier\Lazykanban\Gui\Constant\Colors;
 use Lpuygrenier\Lazykanban\Gui\Constant\Styles;
-use Lpuygrenier\Lazykanban\Gui\KeyboardAction;
+use Lpuygrenier\Lazykanban\Gui\Common\KeyboardAction;
 use Lpuygrenier\Lazykanban\Gui\Common\IGuiComponent;
 use Lpuygrenier\Lazykanban\Gui\Common\IFilterable;
 use Lpuygrenier\Lazykanban\Constants\Keybinds;

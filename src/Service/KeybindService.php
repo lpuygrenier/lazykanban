@@ -3,7 +3,7 @@
 namespace Lpuygrenier\Lazykanban\Service;
 
 use Monolog\Logger;
-use Lpuygrenier\Lazykanban\Gui\KeyboardAction;
+use Lpuygrenier\Lazykanban\Gui\Common\KeyboardAction;
 use Lpuygrenier\Lazykanban\Constants\Keybinds;
 use PhpTui\Term\Event;
 
