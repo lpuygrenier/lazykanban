@@ -10,6 +10,7 @@ use Lpuygrenier\Lazykanban\Constants\Keybinds;
 use Lpuygrenier\Lazykanban\Service\FileService;
 use Lpuygrenier\Lazykanban\Service\ConfigService;
 use Lpuygrenier\Lazykanban\Service\KeybindService;
+use Lpuygrenier\Lazykanban\Service\BoardManager;
 use Lpuygrenier\Lazykanban\Gui\Page\KanbanPage;
 use Monolog\Logger;
 use Lpuygrenier\Lazykanban\Entity\Board;
@@ -39,20 +40,19 @@ class Engine {
     private FileService $fileService;
     private ConfigService $configService;
     private KeybindService $keybindService;
+    private BoardManager $boardManager;
     private Terminal $terminal;
     private Display $display;
     private IGuiComponent $currentIGuiComponent;
     private ?IGuiComponent $previousIGuiComponent = null;
     private StatusBar $statusBar;
-    public Board $board;
-    private string $currentBoardFilename;
 
     public function __construct(
         Logger $logger,
         FileService $fileService,
         ConfigService $configService,
         KeybindService $keybindService,
-        string $defaultFilename = 'board.json'
+        BoardManager $boardManager
     ) {
         $this->statusBar = new StatusBar();
 
@@ -60,10 +60,7 @@ class Engine {
         $this->fileService = $fileService;
         $this->configService = $configService;
         $this->keybindService = $keybindService;
-
-        // Load initial board
-        $this->currentBoardFilename = $defaultFilename;
-        $this->board = $this->fileService->import($defaultFilename);
+        $this->boardManager = $boardManager;
     }
 
     public function initialize(Terminal $terminal, ?Backend $backend = null): void {
@@ -76,22 +73,26 @@ class Engine {
             ->build();
 
         $boardFiles = $this->fileService->listBoardFiles();
-        $this->currentIGuiComponent = new KanbanPage($this->board, $boardFiles);
+        $this->currentIGuiComponent = new KanbanPage($this->boardManager->getCurrentBoard(), $boardFiles);
 
         // Set up board switching callback
         if ($this->currentIGuiComponent instanceof KanbanPage) {
             $this->currentIGuiComponent->setOnBoardSwitch(function(string $boardFile) {
-                $this->switchToBoard($boardFile);
+                $this->boardManager->switchToBoard($boardFile);
+                $this->currentIGuiComponent->updateBoard($this->boardManager->getCurrentBoard());
             });
 
             // Set up board save callback
             $this->currentIGuiComponent->setOnBoardSave(function() {
-                $this->saveCurrentBoard();
+                $this->boardManager->saveCurrentBoard();
             });
 
             // Set up board create callback
             $this->currentIGuiComponent->setOnBoardCreate(function(string $name, $editingBoard = null) {
-                $this->createBoard($name, $editingBoard);
+                $this->boardManager->createBoard($name, $editingBoard);
+                $this->currentIGuiComponent->updateBoard($this->boardManager->getCurrentBoard());
+                $boardFiles = $this->fileService->listBoardFiles();
+                $this->currentIGuiComponent->updateBoardFiles($boardFiles, count($boardFiles) - 1);
             });
         }
 
@@ -172,53 +173,9 @@ class Engine {
         return $action !== null && in_array($action, [Keybinds::ACTION_HELP]);
     }
 
-    private function saveCurrentBoard(): void
-    {
-        $this->fileService->export($this->board, $this->currentBoardFilename);
-        $this->logger->info('Board saved to: ' . $this->currentBoardFilename);
-    }
 
-    private function createBoard(string $name, $editingBoard = null): void
-    {
-        // Generate a unique filename based on the board name
-        $filename = $this->generateBoardFilename($name);
 
-        // Create a new board
-        $newBoard = new Board();
-        $newBoard->id = rand(1, 10000); // Simple ID generation
-        $newBoard->name = $name;
 
-        // Save the new board
-        $this->fileService->export($newBoard, $filename);
-
-        // Switch to the new board
-        $this->switchToBoard($filename);
-
-        // Refresh board files list in the UI
-        $this->refreshBoardFiles();
-
-        $this->logger->info('Board created: ' . $name . ' (' . $filename . ')');
-    }
-
-    private function generateBoardFilename(string $name): string
-    {
-        // Sanitize the name for filename
-        $sanitized = preg_replace('/[^a-zA-Z0-9_-]/', '_', $name);
-        $sanitized = strtolower($sanitized);
-
-        // Check if file already exists and add number if needed
-        $baseFilename = $sanitized . '.json';
-        $counter = 1;
-        $filename = $baseFilename;
-
-        $boardDir = $this->fileService->getBoardDirectory();
-        while (file_exists($boardDir . '/' . $filename)) {
-            $filename = $sanitized . '_' . $counter . '.json';
-            $counter++;
-        }
-
-        return $filename;
-    }
 
     private function handleGlobalKeybindAction(KeyboardAction $keyboardAction): void {
         if ($keyboardAction === null) {
@@ -254,45 +211,6 @@ class Engine {
             );
     }
 
-    private function switchToBoard(string $boardFile): void {
-        $this->logger->info("Switching to board: $boardFile");
 
-        // Load the new board
-        $newBoard = $this->fileService->import($boardFile);
 
-        // Update the current board and filename
-        $this->board = $newBoard;
-        $this->currentBoardFilename = $boardFile;
-
-        // Update the KanbanPage with the new board
-        if ($this->currentIGuiComponent instanceof KanbanPage) {
-            $this->currentIGuiComponent->updateBoard($newBoard);
-        }
-
-        $this->logger->info("Successfully switched to board: {$newBoard->name}");
-    }
-
-    private function refreshBoardFiles(): void
-    {
-        $boardFiles = $this->fileService->listBoardFiles();
-        if ($this->currentIGuiComponent instanceof KanbanPage) {
-            // We need to update the board files in the BoardSectionComponent
-            // For now, we'll recreate the component with updated files
-            $this->initializeBoardSection($boardFiles);
-        }
-    }
-
-    private function initializeBoardSection(array $boardFiles): void
-    {
-        if ($this->currentIGuiComponent instanceof KanbanPage) {
-            // Get the current selected index from the existing component
-            $currentSelected = 0;
-            if (property_exists($this->currentIGuiComponent, 'boardSectionComponent')) {
-                $currentSelected = $this->currentIGuiComponent->getBoardSectionSelected();
-            }
-
-            // Update the board files in the component
-            $this->currentIGuiComponent->updateBoardFiles($boardFiles, $currentSelected);
-        }
-    }
 }

@@ -16,6 +16,9 @@ services:
         arguments:
             $keybindFilePath: '%keybind_file_path%'
 
+    Lpuygrenier\Lazykanban\Service\BoardManager:
+        public: true
+
     Lpuygrenier\Lazykanban\Engine\Engine:
         public: true
 

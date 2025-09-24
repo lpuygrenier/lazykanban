@@ -38,7 +38,8 @@ final class App
             $container->get(\Monolog\Logger::class),
             $container->get(\Lpuygrenier\Lazykanban\Service\FileService::class),
             $container->get(\Lpuygrenier\Lazykanban\Service\ConfigService::class),
-            $container->get(\Lpuygrenier\Lazykanban\Service\KeybindService::class)
+            $container->get(\Lpuygrenier\Lazykanban\Service\KeybindService::class),
+            $container->get(\Lpuygrenier\Lazykanban\Service\BoardManager::class)
         );
 
         // Initialize the Engine with terminal and backend

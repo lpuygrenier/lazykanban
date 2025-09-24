@@ -91,6 +91,13 @@ class FileService {
         return $tasks;
     }
 
+    public function sanitizeFilename(string $name): string
+    {
+        // Sanitize the name for filename
+        $sanitized = preg_replace('/[^a-zA-Z0-9_-]/', '_', $name);
+        return strtolower($sanitized);
+    }
+
     public function listBoardFiles(): array {
         $syncDirectory = $this->configService->getBoardSyncDirectory();
         if (!is_dir($syncDirectory)) {
