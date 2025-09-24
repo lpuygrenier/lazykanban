@@ -7,7 +7,7 @@ namespace Lpuygrenier\Lazykanban\Gui\Component;
 use Lpuygrenier\Lazykanban\Entity\Board;
 use Lpuygrenier\Lazykanban\Gui\Constant\Colors;
 use Lpuygrenier\Lazykanban\Gui\KeyboardAction;
-use Lpuygrenier\Lazykanban\Gui\GuiComponent;
+use Lpuygrenier\Lazykanban\Gui\Interfaces\IGuiComponent;
 use PhpTui\Tui\Color\Color;
 use PhpTui\Tui\Extension\Core\Widget\BlockWidget;
 use PhpTui\Tui\Extension\Core\Widget\GridWidget;
@@ -22,7 +22,7 @@ use PhpTui\Tui\Widget\BorderType;
 use PhpTui\Tui\Widget\Direction;
 use PhpTui\Tui\Widget\Widget;
 
-final class BoardComponent implements GuiComponent
+final class BoardComponent implements IGuiComponent
 {
     private Board $board;
     private bool $isActive = false;

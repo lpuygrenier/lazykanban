@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Lpuygrenier\Lazykanban\Gui;
+namespace Lpuygrenier\Lazykanban\Gui\Interfaces;
 
-use PhpTui\Term\Event;
+use Lpuygrenier\Lazykanban\Gui\KeyboardAction;
 use PhpTui\Tui\Widget\Widget;
 
-interface GuiComponent
+interface IGuiComponent
 {
     public function build(): Widget;
 

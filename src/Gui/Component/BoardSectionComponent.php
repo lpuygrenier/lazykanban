@@ -7,7 +7,7 @@ namespace Lpuygrenier\Lazykanban\Gui\Component;
 use Lpuygrenier\Lazykanban\Gui\Constant\Colors;
 use Lpuygrenier\Lazykanban\Gui\Constant\Styles;
 use Lpuygrenier\Lazykanban\Gui\KeyboardAction;
-use Lpuygrenier\Lazykanban\Gui\GuiComponent;
+use Lpuygrenier\Lazykanban\Gui\Interfaces\IGuiComponent;
 use Lpuygrenier\Lazykanban\Gui\Interfaces\Filterable;
 use Lpuygrenier\Lazykanban\Constants\Keybinds;
 use PhpTui\Tui\Extension\Core\Widget\BlockWidget;
@@ -25,7 +25,7 @@ use PhpTui\Tui\Widget\Borders;
 use PhpTui\Tui\Widget\BorderType;
 use PhpTui\Tui\Widget\Widget;
 
-final class BoardSectionComponent implements GuiComponent, Filterable
+final class BoardSectionComponent implements IGuiComponent, Filterable
 {
     private array $boardFiles;
     private int $boardSelected;

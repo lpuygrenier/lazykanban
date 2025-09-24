@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Lpuygrenier\Lazykanban\Gui\Component;
 
 
-use Lpuygrenier\Lazykanban\Gui\GuiComponent;
+use Lpuygrenier\Lazykanban\Gui\Interfaces\IGuiComponent;
 use Lpuygrenier\Lazykanban\Gui\KeyboardAction;
 use PhpTui\Tui\Extension\Core\Widget\GridWidget;
 use PhpTui\Tui\Extension\Core\Widget\ParagraphWidget;
@@ -13,7 +13,7 @@ use PhpTui\Tui\Widget\Direction;
 use PhpTui\Tui\Widget\HorizontalAlignment;
 use PhpTui\Tui\Widget\Widget;
 
-final class StatusBar implements GuiComponent {
+final class StatusBar implements IGuiComponent {
 
     private ParagraphWidget $appVersionTxt;
 

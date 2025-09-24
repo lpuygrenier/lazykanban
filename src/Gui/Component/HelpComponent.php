@@ -8,7 +8,7 @@ use Lpuygrenier\Lazykanban\Constants\Keybinds;
 use Lpuygrenier\Lazykanban\Gui\Constant\Colors;
 use Lpuygrenier\Lazykanban\Gui\Constant\Widgets;
 use Lpuygrenier\Lazykanban\Gui\KeyboardAction;
-use Lpuygrenier\Lazykanban\Gui\GuiComponent;
+use Lpuygrenier\Lazykanban\Gui\Interfaces\IGuiComponent;
 use PhpTui\Tui\Extension\Core\Widget\BlockWidget;
 use PhpTui\Tui\Extension\Core\Widget\GridWidget;
 use PhpTui\Tui\Extension\Core\Widget\ParagraphWidget;
@@ -27,7 +27,7 @@ use PhpTui\Tui\Widget\Widget;
 use PhpTui\Term\Event\CodedKeyEvent;
 use PhpTui\Term\KeyCode;
 
-final class HelpComponent implements GuiComponent
+final class HelpComponent implements IGuiComponent
 {
     /** @var KeyboardAction[] */
     private array $keybinds;

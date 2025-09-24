@@ -4,7 +4,7 @@ namespace Lpuygrenier\Lazykanban\Engine;
 use Lpuygrenier\Lazykanban\Gui\Component\HelpComponent;
 use Lpuygrenier\Lazykanban\Gui\Component\Input;
 use Lpuygrenier\Lazykanban\Gui\Component\StatusBar;
-use Lpuygrenier\Lazykanban\Gui\GuiComponent;
+use Lpuygrenier\Lazykanban\Gui\Interfaces\IGuiComponent;
 use Lpuygrenier\Lazykanban\Gui\KeyboardAction;
 use Lpuygrenier\Lazykanban\Constants\Keybinds;
 use Lpuygrenier\Lazykanban\Service\FileService;
@@ -41,8 +41,8 @@ class Engine {
     private KeybindService $keybindService;
     private Terminal $terminal;
     private Display $display;
-    private GuiComponent $currentGuiComponent;
-    private ?GuiComponent $previousGuiComponent = null;
+    private IGuiComponent $currentIGuiComponent;
+    private ?IGuiComponent $previousIGuiComponent = null;
     private StatusBar $statusBar;
     public Board $board;
     private string $currentBoardFilename;
@@ -76,21 +76,21 @@ class Engine {
             ->build();
 
         $boardFiles = $this->fileService->listBoardFiles();
-        $this->currentGuiComponent = new KanbanPage($this->board, $boardFiles);
+        $this->currentIGuiComponent = new KanbanPage($this->board, $boardFiles);
 
         // Set up board switching callback
-        if ($this->currentGuiComponent instanceof KanbanPage) {
-            $this->currentGuiComponent->setOnBoardSwitch(function(string $boardFile) {
+        if ($this->currentIGuiComponent instanceof KanbanPage) {
+            $this->currentIGuiComponent->setOnBoardSwitch(function(string $boardFile) {
                 $this->switchToBoard($boardFile);
             });
 
             // Set up board save callback
-            $this->currentGuiComponent->setOnBoardSave(function() {
+            $this->currentIGuiComponent->setOnBoardSave(function() {
                 $this->saveCurrentBoard();
             });
 
             // Set up board create callback
-            $this->currentGuiComponent->setOnBoardCreate(function(string $name, $editingBoard = null) {
+            $this->currentIGuiComponent->setOnBoardCreate(function(string $name, $editingBoard = null) {
                 $this->createBoard($name, $editingBoard);
             });
         }
@@ -131,12 +131,12 @@ class Engine {
                 if ($this->isGlobalAction($keyboardAction)) {
                     $this->handleGlobalKeybindAction($keyboardAction);
                 } else {
-                    $this->currentGuiComponent->handleKeybindAction($keyboardAction);
+                    $this->currentIGuiComponent->handleKeybindAction($keyboardAction);
                 }
             }
 
             /** Render the app */
-            $this->display->draw($this->buildLayout($this->currentGuiComponent));
+            $this->display->draw($this->buildLayout($this->currentIGuiComponent));
 
             // sleep for Xms - note that it's encouraged to implement apps
             // using an async library such as Amp or React
@@ -233,15 +233,15 @@ class Engine {
     }
 
     private function showHelp(): void {
-        $keybinds = $this->currentGuiComponent->getKeybindActions();
-        $this->previousGuiComponent = $this->currentGuiComponent;
-        $this->currentGuiComponent = new HelpComponent($keybinds, function() {
-            $this->currentGuiComponent = $this->previousGuiComponent;
-            $this->previousGuiComponent = null;
+        $keybinds = $this->currentIGuiComponent->getKeybindActions();
+        $this->previousIGuiComponent = $this->currentIGuiComponent;
+        $this->currentIGuiComponent = new HelpComponent($keybinds, function() {
+            $this->currentIGuiComponent = $this->previousIGuiComponent;
+            $this->previousIGuiComponent = null;
         });
     }
 
-    private function buildLayout(GuiComponent $guiComponent): Widget {
+    private function buildLayout(IGuiComponent $IGuiComponent): Widget {
         return GridWidget::default()
             ->direction(Direction::Vertical)
             ->constraints(
@@ -249,7 +249,7 @@ class Engine {
                 Constraint::min(1),
             )
             ->widgets(
-                $guiComponent->build(),
+                $IGuiComponent->build(),
                 $this->statusBar->build(),
             );
     }
@@ -265,8 +265,8 @@ class Engine {
         $this->currentBoardFilename = $boardFile;
 
         // Update the KanbanPage with the new board
-        if ($this->currentGuiComponent instanceof KanbanPage) {
-            $this->currentGuiComponent->updateBoard($newBoard);
+        if ($this->currentIGuiComponent instanceof KanbanPage) {
+            $this->currentIGuiComponent->updateBoard($newBoard);
         }
 
         $this->logger->info("Successfully switched to board: {$newBoard->name}");
@@ -275,7 +275,7 @@ class Engine {
     private function refreshBoardFiles(): void
     {
         $boardFiles = $this->fileService->listBoardFiles();
-        if ($this->currentGuiComponent instanceof KanbanPage) {
+        if ($this->currentIGuiComponent instanceof KanbanPage) {
             // We need to update the board files in the BoardSectionComponent
             // For now, we'll recreate the component with updated files
             $this->initializeBoardSection($boardFiles);
@@ -284,15 +284,15 @@ class Engine {
 
     private function initializeBoardSection(array $boardFiles): void
     {
-        if ($this->currentGuiComponent instanceof KanbanPage) {
+        if ($this->currentIGuiComponent instanceof KanbanPage) {
             // Get the current selected index from the existing component
             $currentSelected = 0;
-            if (property_exists($this->currentGuiComponent, 'boardSectionComponent')) {
-                $currentSelected = $this->currentGuiComponent->getBoardSectionSelected();
+            if (property_exists($this->currentIGuiComponent, 'boardSectionComponent')) {
+                $currentSelected = $this->currentIGuiComponent->getBoardSectionSelected();
             }
 
             // Update the board files in the component
-            $this->currentGuiComponent->updateBoardFiles($boardFiles, $currentSelected);
+            $this->currentIGuiComponent->updateBoardFiles($boardFiles, $currentSelected);
         }
     }
 }

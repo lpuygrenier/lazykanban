@@ -16,7 +16,7 @@ use PhpTui\Term\Event\CodedKeyEvent;
 use PhpTui\Term\Event\KeyEvent;
 use PhpTui\Term\KeyCode;
 use Lpuygrenier\Lazykanban\Gui\Constant\Colors;
-use Lpuygrenier\Lazykanban\Gui\GuiComponent;
+use Lpuygrenier\Lazykanban\Gui\Interfaces\IGuiComponent;
 use PhpTui\Tui\Extension\Core\Widget\BlockWidget;
 use PhpTui\Tui\Extension\Core\Widget\GridWidget;
 use PhpTui\Tui\Extension\Core\Widget\Paragraph\Wrap;
@@ -37,7 +37,7 @@ use PhpTui\Tui\Widget\BorderType;
 use PhpTui\Tui\Widget\Direction;
 use PhpTui\Tui\Widget\Widget;
 
-final class Input implements GuiComponent
+final class Input implements IGuiComponent
 {
 
     private $placeholder = "";

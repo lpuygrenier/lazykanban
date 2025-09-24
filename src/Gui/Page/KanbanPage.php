@@ -8,7 +8,7 @@ use Lpuygrenier\Lazykanban\Entity\Board;
 use Lpuygrenier\Lazykanban\Entity\Task;
 use Lpuygrenier\Lazykanban\Gui\Constant\Colors;
 use Lpuygrenier\Lazykanban\Gui\KeyboardAction;
-use Lpuygrenier\Lazykanban\Gui\GuiComponent;
+use Lpuygrenier\Lazykanban\Gui\Interfaces\IGuiComponent;
 use Lpuygrenier\Lazykanban\Constants\Keybinds;
 use Lpuygrenier\Lazykanban\Gui\Component\TaskComponent;
 use Lpuygrenier\Lazykanban\Gui\Component\BoardComponent;
@@ -21,7 +21,7 @@ use PhpTui\Tui\Layout\Constraint;
 use PhpTui\Tui\Widget\Direction;
 use PhpTui\Tui\Widget\Widget;
 
-final class KanbanPage implements GuiComponent
+final class KanbanPage implements IGuiComponent
 {
 
     private Board $board;

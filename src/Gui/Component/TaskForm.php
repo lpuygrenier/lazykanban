@@ -6,7 +6,7 @@ namespace Lpuygrenier\Lazykanban\Gui\Component;
 
 use Lpuygrenier\Lazykanban\Gui\Constant\Widgets;
 use Lpuygrenier\Lazykanban\Gui\KeyboardAction;
-use Lpuygrenier\Lazykanban\Gui\GuiComponent;
+use Lpuygrenier\Lazykanban\Gui\Interfaces\IGuiComponent;
 use PhpTui\Tui\Extension\Core\Widget\GridWidget;
 use PhpTui\Tui\Extension\Core\Widget\ParagraphWidget;
 use PhpTui\Tui\Layout\Constraint;
@@ -16,7 +16,7 @@ use PhpTui\Tui\Widget\Widget;
 use PhpTui\Term\Event\CodedKeyEvent;
 use PhpTui\Term\KeyCode;
 
-final class TaskForm implements GuiComponent
+final class TaskForm implements IGuiComponent
 {
     private Input $nameInput;
     private Input $descriptionInput;
