@@ -16,7 +16,7 @@ use PhpTui\Term\Event\CodedKeyEvent;
 use PhpTui\Term\Event\KeyEvent;
 use PhpTui\Term\KeyCode;
 use Lpuygrenier\Lazykanban\Gui\Constant\Colors;
-use Lpuygrenier\Lazykanban\Gui\Interfaces\IGuiComponent;
+use Lpuygrenier\Lazykanban\Gui\Common\IGuiComponent;
 use PhpTui\Tui\Extension\Core\Widget\BlockWidget;
 use PhpTui\Tui\Extension\Core\Widget\GridWidget;
 use PhpTui\Tui\Extension\Core\Widget\Paragraph\Wrap;

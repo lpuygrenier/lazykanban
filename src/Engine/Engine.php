@@ -4,7 +4,7 @@ namespace Lpuygrenier\Lazykanban\Engine;
 use Lpuygrenier\Lazykanban\Gui\Component\HelpComponent;
 use Lpuygrenier\Lazykanban\Gui\Component\Input;
 use Lpuygrenier\Lazykanban\Gui\Component\StatusBar;
-use Lpuygrenier\Lazykanban\Gui\Interfaces\IGuiComponent;
+use Lpuygrenier\Lazykanban\Gui\Common\IGuiComponent;
 use Lpuygrenier\Lazykanban\Gui\KeyboardAction;
 use Lpuygrenier\Lazykanban\Constants\Keybinds;
 use Lpuygrenier\Lazykanban\Service\FileService;

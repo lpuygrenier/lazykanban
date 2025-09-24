@@ -8,7 +8,7 @@ use Lpuygrenier\Lazykanban\Entity\Board;
 use Lpuygrenier\Lazykanban\Entity\Task;
 use Lpuygrenier\Lazykanban\Gui\Constant\Colors;
 use Lpuygrenier\Lazykanban\Gui\KeyboardAction;
-use Lpuygrenier\Lazykanban\Gui\Interfaces\IGuiComponent;
+use Lpuygrenier\Lazykanban\Gui\Common\IGuiComponent;
 use Lpuygrenier\Lazykanban\Constants\Keybinds;
 use Lpuygrenier\Lazykanban\Gui\Component\TaskComponent;
 use Lpuygrenier\Lazykanban\Gui\Component\BoardComponent;

@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Lpuygrenier\Lazykanban\Gui\Component;
 
 
-use Lpuygrenier\Lazykanban\Gui\Interfaces\IGuiComponent;
+use Lpuygrenier\Lazykanban\Gui\Common\IGuiComponent;
 use Lpuygrenier\Lazykanban\Gui\KeyboardAction;
 use PhpTui\Tui\Extension\Core\Widget\GridWidget;
 use PhpTui\Tui\Extension\Core\Widget\ParagraphWidget;
