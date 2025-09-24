@@ -15,6 +15,9 @@ use Lpuygrenier\Lazykanban\Gui\Component\BoardComponent;
 use Lpuygrenier\Lazykanban\Gui\Component\BoardSectionComponent;
 use Lpuygrenier\Lazykanban\Gui\Component\TaskForm;
 use Lpuygrenier\Lazykanban\Gui\Component\BoardForm;
+use Lpuygrenier\Lazykanban\Gui\Component\Input;
+use Lpuygrenier\Lazykanban\Gui\Page\State\KanbanPageState;
+use Lpuygrenier\Lazykanban\Gui\Page\State\ViewingState;
 use PhpTui\Tui\Extension\Core\Widget\GridWidget;
 use PhpTui\Tui\Extension\Core\Widget\Table\TableState;
 use PhpTui\Tui\Layout\Constraint;
@@ -30,8 +33,8 @@ final class KanbanPage implements IGuiComponent
     private BoardSectionComponent $boardSectionComponent;
     private ?TaskForm $taskForm = null;
     private ?BoardForm $boardForm = null;
-    private bool $isEditingTask = false;
-    private bool $isEditingBoard = false;
+    private ?Input $filterInput = null;
+    private KanbanPageState $state;
     private string $activeComponent = 'task';
     private $onBoardSwitch = null;
     private $onBoardSave = null;
@@ -61,6 +64,19 @@ final class KanbanPage implements IGuiComponent
         $this->boardForm->setOnCancel(function() {
             $this->cancelBoardForm();
         });
+
+        // Initialize filter input
+        $this->filterInput = new Input();
+        $this->filterInput->setLabel('Filter query');
+        $this->filterInput->setOnSubmit(function(string $query) {
+            $this->applyFilter($query);
+        });
+        $this->filterInput->setOnCancel(function() {
+            $this->clearFilter();
+        });
+
+        // Initialize state
+        $this->state = new ViewingState();
 
         // Set up board selection callback
         $this->boardSectionComponent->setOnBoardSelected(function(string $boardFile) {
@@ -110,12 +126,12 @@ final class KanbanPage implements IGuiComponent
                 ($this->onBoardSave)();
             }
         }
-        $this->isEditingTask = false;
+        $this->state = new ViewingState();
     }
 
     private function cancelTaskForm(): void
     {
-        $this->isEditingTask = false;
+        $this->state = new ViewingState();
     }
 
     private function submitBoard(string $name, $editingBoard = null): void
@@ -125,12 +141,46 @@ final class KanbanPage implements IGuiComponent
                 ($this->onBoardCreate)($name, $editingBoard);
             }
         }
-        $this->isEditingBoard = false;
+        $this->state = new ViewingState();
     }
 
     private function cancelBoardForm(): void
     {
-        $this->isEditingBoard = false;
+        $this->state = new ViewingState();
+    }
+
+    private function applyFilter(string $query): void
+    {
+        $filterCallable = function ($item) use ($query) {
+            if ($this->activeComponent === 'task') {
+                // For tasks, item is ['task' => Task, 'status' => string]
+                $task = $item['task'];
+                return stripos($task->getName(), $query) !== false || stripos((string)$task->getId(), $query) !== false;
+            } elseif ($this->activeComponent === 'boardsection') {
+                // For board files, item is string
+                return stripos($item, $query) !== false;
+            }
+            return true;
+        };
+
+        if ($this->activeComponent === 'task') {
+            $this->taskComponent->setFilter($filterCallable);
+        } elseif ($this->activeComponent === 'boardsection') {
+            $this->boardSectionComponent->setFilter($filterCallable);
+        }
+
+        $this->state = new ViewingState();
+    }
+
+    private function clearFilter(): void
+    {
+        if ($this->activeComponent === 'task') {
+            $this->taskComponent->clearFilter();
+        } elseif ($this->activeComponent === 'boardsection') {
+            $this->boardSectionComponent->clearFilter();
+        }
+
+        $this->state = new ViewingState();
     }
 
     private function getSelectedTask()
@@ -156,16 +206,66 @@ final class KanbanPage implements IGuiComponent
         $this->boardSectionComponent->setSelected($selected);
     }
 
+    public function getTaskForm(): TaskForm
+    {
+        return $this->taskForm;
+    }
+
+    public function getBoardForm(): BoardForm
+    {
+        return $this->boardForm;
+    }
+
+    public function getTaskComponent(): TaskComponent
+    {
+        return $this->taskComponent;
+    }
+
+    public function getBoardSectionComponent(): BoardSectionComponent
+    {
+        return $this->boardSectionComponent;
+    }
+
+    public function getFilterInput(): Input
+    {
+        return $this->filterInput;
+    }
+
+    public function getActiveComponent(): string
+    {
+        return $this->activeComponent;
+    }
+
+    public function setActiveComponent(string $component): void
+    {
+        $this->activeComponent = $component;
+    }
+
+    public function getCurrentComponent(): IGuiComponent
+    {
+        if ($this->activeComponent === 'task') {
+            return $this->taskComponent;
+        } elseif ($this->activeComponent === 'boardsection') {
+            return $this->boardSectionComponent;
+        }
+        return $this->taskComponent;
+    }
+
 
     public function build(): Widget
     {
+        // Show filter input if active
+        if ($this->state->isFiltering($this) && $this->filterInput !== null) {
+            return $this->filterInput->build();
+        }
+
         // Show task form if active
-        if ($this->isEditingTask && $this->taskForm !== null) {
+        if ($this->state->isEditingTask($this) && $this->taskForm !== null) {
             return $this->taskForm->build();
         }
 
         // Show board form if active
-        if ($this->isEditingBoard && $this->boardForm !== null) {
+        if ($this->state->isEditingBoard($this) && $this->boardForm !== null) {
             return $this->boardForm->build();
         }
 
@@ -201,73 +301,19 @@ final class KanbanPage implements IGuiComponent
 
 
     public function handleKeybindAction(KeyboardAction $keyboardAction): void {
-        // Handle task form if active
-        if ($this->isEditingTask && $this->taskForm !== null) {
+        if ($this->state instanceof EditingTaskState) {
             $this->taskForm->handleKeybindAction($keyboardAction);
-            return;
-        }
-
-        // Handle board form if active
-        if ($this->isEditingBoard && $this->boardForm !== null) {
+        } elseif ($this->state instanceof EditingBoardState) {
             $this->boardForm->handleKeybindAction($keyboardAction);
-            return;
-        }
-
-        $action = $keyboardAction->getAction();
-        if ($action === null) {
-            return;
-        }
-
-        switch ($action) {
-            case Keybinds::ACTION_CREATE_TASK:
-                if ($this->activeComponent === 'task') {
-                    $this->taskForm->setCreateMode();
-                    $this->isEditingTask = true;
-                } elseif ($this->activeComponent === 'boardsection') {
-                    $this->boardForm->setCreateMode();
-                    $this->isEditingBoard = true;
-                }
-                break;
-            case Keybinds::ACTION_SELECT:
-                // Edit selected task
-                if ($this->activeComponent === 'task') {
-                    $selectedTask = $this->getSelectedTask();
-                    if ($selectedTask !== null) {
-                        $this->taskForm->setEditMode($selectedTask);
-                        $this->isEditingTask = true;
-                    }
-                } elseif ($this->activeComponent === 'boardsection') {
-                    // For now, board editing is not implemented as boards are just files
-                    // Could be extended to rename board files in the future
-                }
-                break;
-            case Keybinds::ACTION_MOVE_LEFT:
-                $this->activeComponent = 'task';
-                break;
-            case Keybinds::ACTION_MOVE_RIGHT:
-                $this->activeComponent = 'boardsection';
-                break;
-            case Keybinds::ACTION_MOVE_UP:
-            case Keybinds::ACTION_MOVE_DOWN:
-                if ($this->activeComponent === 'task') {
-                    $this->taskComponent->handleKeybindAction($keyboardAction);
-                } elseif ($this->activeComponent === 'boardsection') {
-                    $this->boardSectionComponent->handleKeybindAction($keyboardAction);
-                }
-                break;
-            case Keybinds::ACTION_MOVE_TASK:
-            case Keybinds::ACTION_DELETE_TASK:
-                if ($this->activeComponent === 'task') {
-                    $this->taskComponent->handleKeybindAction($keyboardAction);
-                    // Save changes to file after move/delete operations
-                    if ($this->onBoardSave !== null) {
-                        ($this->onBoardSave)();
-                    }
-                }
-                break;
+        } elseif ($this->state instanceof FilteringState) {
+            $this->filterInput->handleKeybindAction($keyboardAction);
+        } else {
+            $newState = $this->state->handleKeybindAction($this, $keyboardAction);
+            if ($newState !== null) {
+                $this->state = $newState;
+            }
         }
     }
-
     public function getKeybindActions(): array
     {
         $descriptions = Keybinds::getDescriptions();

@@ -46,6 +46,8 @@ final class Input implements IGuiComponent
     private bool $isActive = false;
 
     private ?Logger $logger;
+    private $onSubmit = null;
+    private $onCancel = null;
 
     public function __construct(?Logger $logger = null)
     {
@@ -76,6 +78,16 @@ final class Input implements IGuiComponent
     public function setText(string $text): void
     {
         $this->textEditor = TextEditor::fromString($text);
+    }
+
+    public function setOnSubmit(callable $callback): void
+    {
+        $this->onSubmit = $callback;
+    }
+
+    public function setOnCancel(callable $callback): void
+    {
+        $this->onCancel = $callback;
     }
 
     public function build(): Widget
@@ -139,7 +151,15 @@ final class Input implements IGuiComponent
             } elseif ($event->code === KeyCode::Delete) {
                 $this->textEditor->delete();
             } elseif ($event->code === KeyCode::Enter) {
-                $this->textEditor->newLine();
+                if ($this->onSubmit) {
+                    ($this->onSubmit)($this->getText());
+                } else {
+                    $this->textEditor->newLine();
+                }
+            } elseif ($event->code === KeyCode::Esc) {
+                if ($this->onCancel) {
+                    ($this->onCancel)();
+                }
             } elseif ($event->code === KeyCode::Left) {
                 $this->textEditor->cursorLeft();
             } elseif ($event->code === KeyCode::Right) {
