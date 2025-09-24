@@ -16,6 +16,7 @@ use Lpuygrenier\Lazykanban\Gui\Component\BoardSectionComponent;
 use Lpuygrenier\Lazykanban\Gui\Component\TaskForm;
 use Lpuygrenier\Lazykanban\Gui\Component\BoardForm;
 use Lpuygrenier\Lazykanban\Gui\Component\Input;
+use Lpuygrenier\Lazykanban\Gui\Component\TaskDescription;
 use Lpuygrenier\Lazykanban\Gui\Page\State\KanbanPageState;
 use Lpuygrenier\Lazykanban\Gui\Page\State\ViewingState;
 use PhpTui\Tui\Extension\Core\Widget\GridWidget;
@@ -274,6 +275,9 @@ final class KanbanPage implements IGuiComponent
         $this->boardComponent->setSelectedTaskIndex($this->taskComponent->getState()->selected);
         $this->boardSectionComponent->setActive($this->activeComponent === 'boardsection');
 
+
+        $taskDescription = new TaskDescription($this->getCurrentTask()->getDescription() ?? '');
+
         $sideContent = GridWidget::default()
             ->direction(Direction::Vertical)
             ->constraints(
@@ -286,6 +290,17 @@ final class KanbanPage implements IGuiComponent
             );
 
         $mainContent = GridWidget::default()
+            ->direction(Direction::Vertical)
+            ->constraints(
+                Constraint::percentage(75),
+                Constraint::percentage(25),
+            )
+            ->widgets(
+                $this->boardComponent->build(),
+                $taskDescription->build()
+            );
+            
+        $allContent = GridWidget::default()
             ->direction(Direction::Horizontal)
             ->constraints(
                 Constraint::percentage(25),
@@ -293,10 +308,10 @@ final class KanbanPage implements IGuiComponent
             )
             ->widgets(
                 $sideContent,
-                $this->boardComponent->build()
+                $mainContent
             );
         
-        return $mainContent;
+        return $allContent;
     }
 
 
@@ -327,5 +342,16 @@ final class KanbanPage implements IGuiComponent
             new KeyboardAction(Keybinds::ACTION_MOVE_TASK, null, $descriptions[Keybinds::ACTION_MOVE_TASK]),
             new KeyboardAction(Keybinds::ACTION_DELETE_TASK, null, $descriptions[Keybinds::ACTION_DELETE_TASK]),
         ];
+    }
+
+    private function getCurrentTask(): ?Task
+    {
+        $filteredTasks = $this->taskComponent->getFilteredItems();
+        $selectedIndex = $this->taskComponent->getState()->selected;
+        $task = null;
+        if (isset($filteredTasks[$selectedIndex])) {
+            $task = $filteredTasks[$selectedIndex]['task'];
+        }
+        return $task;
     }
 }
