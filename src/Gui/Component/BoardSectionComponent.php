@@ -8,6 +8,7 @@ use Lpuygrenier\Lazykanban\Gui\Constant\Colors;
 use Lpuygrenier\Lazykanban\Gui\Constant\Styles;
 use Lpuygrenier\Lazykanban\Gui\KeyboardAction;
 use Lpuygrenier\Lazykanban\Gui\GuiComponent;
+use Lpuygrenier\Lazykanban\Gui\Interfaces\Filterable;
 use Lpuygrenier\Lazykanban\Constants\Keybinds;
 use PhpTui\Tui\Extension\Core\Widget\BlockWidget;
 use PhpTui\Tui\Extension\Core\Widget\Paragraph\Wrap;
@@ -24,12 +25,13 @@ use PhpTui\Tui\Widget\Borders;
 use PhpTui\Tui\Widget\BorderType;
 use PhpTui\Tui\Widget\Widget;
 
-final class BoardSectionComponent implements GuiComponent
+final class BoardSectionComponent implements GuiComponent, Filterable
 {
     private array $boardFiles;
     private int $boardSelected;
     private bool $isActive = false;
     private $onBoardSelected = null;
+    private mixed $filter = null;
 
     public function __construct(array $boardFiles, int $boardSelected)
     {
@@ -61,8 +63,9 @@ final class BoardSectionComponent implements GuiComponent
     {
         $this->boardFiles = $boardFiles;
         // Reset selection if it's out of bounds
-        if ($this->boardSelected >= count($this->boardFiles)) {
-            $this->boardSelected = max(0, count($this->boardFiles) - 1);
+        $filteredCount = count($this->getFilteredItems());
+        if ($this->boardSelected >= $filteredCount) {
+            $this->boardSelected = max(0, $filteredCount - 1);
         }
     }
 
@@ -76,7 +79,8 @@ final class BoardSectionComponent implements GuiComponent
 
     public function moveDown(): void
     {
-        if ($this->boardSelected < count($this->boardFiles) - 1) {
+        $filteredCount = count($this->getFilteredItems());
+        if ($this->boardSelected < $filteredCount - 1) {
             $this->boardSelected++;
             $this->triggerBoardSelection();
         }
@@ -84,14 +88,16 @@ final class BoardSectionComponent implements GuiComponent
 
     private function triggerBoardSelection(): void
     {
-        if ($this->onBoardSelected !== null && isset($this->boardFiles[$this->boardSelected])) {
-            ($this->onBoardSelected)($this->boardFiles[$this->boardSelected]);
+        $filteredItems = $this->getFilteredItems();
+        if ($this->onBoardSelected !== null && isset($filteredItems[$this->boardSelected])) {
+            ($this->onBoardSelected)($filteredItems[$this->boardSelected]);
         }
     }
 
     public function build(): Widget
     {
-        if (empty($this->boardFiles)) {
+        $filteredFiles = $this->getFilteredItems();
+        if (empty($filteredFiles)) {
             return BlockWidget::default()
                 ->borders(Borders::ALL)
                 ->borderType(BorderType::Rounded)
@@ -108,7 +114,7 @@ final class BoardSectionComponent implements GuiComponent
             return TableRow::fromCells(
                 TableCell::fromString($file)
             );
-        }, $this->boardFiles);
+        }, $filteredFiles);
 
         $boardState = new TableState(selected: $this->boardSelected);
 
@@ -155,5 +161,26 @@ final class BoardSectionComponent implements GuiComponent
             new KeyboardAction(Keybinds::ACTION_MOVE_UP, null, $descriptions[Keybinds::ACTION_MOVE_UP]),
             new KeyboardAction(Keybinds::ACTION_MOVE_DOWN, null, $descriptions[Keybinds::ACTION_MOVE_DOWN]),
         ];
+    }
+
+    public function setFilter(?callable $filter): void
+    {
+        $this->filter = $filter;
+        $this->boardSelected = 0;
+    }
+
+    public function clearFilter(): void
+    {
+        $this->filter = null;
+        $this->boardSelected = 0;
+    }
+
+    public function getFilteredItems(): array
+    {
+        if ($this->filter === null) {
+            return $this->boardFiles;
+        }
+
+        return array_filter($this->boardFiles, $this->filter);
     }
 }

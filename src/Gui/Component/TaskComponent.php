@@ -10,6 +10,7 @@ use Lpuygrenier\Lazykanban\Gui\Constant\Colors;
 use Lpuygrenier\Lazykanban\Gui\Constant\Styles;
 use Lpuygrenier\Lazykanban\Gui\KeyboardAction;
 use Lpuygrenier\Lazykanban\Gui\GuiComponent;
+use Lpuygrenier\Lazykanban\Gui\Interfaces\Filterable;
 use Lpuygrenier\Lazykanban\Constants\Keybinds;
 use PhpTui\Tui\Color\Color;
 use PhpTui\Tui\Extension\Core\Widget\BlockWidget;
@@ -28,11 +29,12 @@ use PhpTui\Tui\Widget\Borders;
 use PhpTui\Tui\Widget\BorderType;
 use PhpTui\Tui\Widget\Widget;
 
-final class TaskComponent implements GuiComponent
+final class TaskComponent implements GuiComponent, Filterable
 {
     private Board $board;
     private TableState $state;
     private bool $isActive = false;
+    private mixed $filter = null;
 
     public function __construct(Board $board, TableState $state)
     {
@@ -52,7 +54,6 @@ final class TaskComponent implements GuiComponent
 
     public function moveUp(): void
     {
-        $totalTasks = count($this->board->todo) + count($this->board->inProgress) + count($this->board->done);
         if ($this->state->selected > 0) {
             $this->state->selected--;
         }
@@ -60,7 +61,7 @@ final class TaskComponent implements GuiComponent
 
     public function moveDown(): void
     {
-        $totalTasks = count($this->board->todo) + count($this->board->inProgress) + count($this->board->done);
+        $totalTasks = count($this->getFilteredItems());
         if ($this->state->selected < $totalTasks - 1) {
             $this->state->selected++;
         }
@@ -112,7 +113,19 @@ final class TaskComponent implements GuiComponent
         ];
     }
 
-    public function moveSelectedTask(): void
+    public function setFilter(?callable $filter): void
+    {
+        $this->filter = $filter;
+        $this->state->selected = 0;
+    }
+
+    public function clearFilter(): void
+    {
+        $this->filter = null;
+        $this->state->selected = 0;
+    }
+
+    public function getFilteredItems(): array
     {
         $allTasks = array_merge(
             array_map(fn($task) => ['task' => $task, 'status' => 'TODO'], $this->board->todo),
@@ -120,9 +133,20 @@ final class TaskComponent implements GuiComponent
             array_map(fn($task) => ['task' => $task, 'status' => 'DONE'], $this->board->done)
         );
 
-        if (isset($allTasks[$this->state->selected])) {
-            $task = $allTasks[$this->state->selected]['task'];
-            $status = $allTasks[$this->state->selected]['status'];
+        if ($this->filter === null) {
+            return $allTasks;
+        }
+
+        return array_filter($allTasks, $this->filter);
+    }
+
+    public function moveSelectedTask(): void
+    {
+        $filteredTasks = $this->getFilteredItems();
+
+        if (isset($filteredTasks[$this->state->selected])) {
+            $task = $filteredTasks[$this->state->selected]['task'];
+            $status = $filteredTasks[$this->state->selected]['status'];
             $nextStatus = match ($status) {
                 'TODO' => Status::IN_PROGRESS,
                 'IN_PROGRESS' => Status::DONE,
@@ -134,17 +158,13 @@ final class TaskComponent implements GuiComponent
 
     public function deleteSelectedTask(): void
     {
-        $allTasks = array_merge(
-            array_map(fn($task) => ['task' => $task, 'status' => 'TODO'], $this->board->todo),
-            array_map(fn($task) => ['task' => $task, 'status' => 'IN_PROGRESS'], $this->board->inProgress),
-            array_map(fn($task) => ['task' => $task, 'status' => 'DONE'], $this->board->done)
-        );
+        $filteredTasks = $this->getFilteredItems();
 
-        if (isset($allTasks[$this->state->selected])) {
-            $task = $allTasks[$this->state->selected]['task'];
+        if (isset($filteredTasks[$this->state->selected])) {
+            $task = $filteredTasks[$this->state->selected]['task'];
             $this->board->remove($task);
             // Adjust selection if necessary
-            $totalTasks = count($this->board->todo) + count($this->board->inProgress) + count($this->board->done);
+            $totalTasks = count($this->getFilteredItems());
             if ($this->state->selected >= $totalTasks) {
                 $this->state->selected = max(0, $totalTasks - 1);
             }
@@ -153,12 +173,8 @@ final class TaskComponent implements GuiComponent
 
     private function taskTable(): TableWidget
     {
-        // Get all tasks from the board
-        $allTasks = array_merge(
-            array_map(fn($task) => ['task' => $task, 'status' => 'TODO'], $this->board->todo),
-            array_map(fn($task) => ['task' => $task, 'status' => 'IN_PROGRESS'], $this->board->inProgress),
-            array_map(fn($task) => ['task' => $task, 'status' => 'DONE'], $this->board->done)
-        );
+        // Get filtered tasks
+        $filteredTasks = $this->getFilteredItems();
         $highlightStyle = $this->isActive ? Styles::$HIGHLIGHTED_STYLE : Style::default();
         return TableWidget::default()
             ->state($this->state)
@@ -184,7 +200,7 @@ final class TaskComponent implements GuiComponent
                     TableCell::fromString($task->getName()),
                     TableCell::fromString($this->parseStatus($status)),
                 );
-            }, $allTasks));
+            }, $filteredTasks));
     }
 
     private function parseStatus(string $status): string {
