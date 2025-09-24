@@ -7,6 +7,8 @@ use Lpuygrenier\Lazykanban\Gui\Component\StatusBar;
 use Lpuygrenier\Lazykanban\Gui\Common\IGuiComponent;
 use Lpuygrenier\Lazykanban\Gui\Common\KeyboardAction;
 use Lpuygrenier\Lazykanban\Constants\Keybinds;
+use Lpuygrenier\Lazykanban\Gui\Component\TooSmallScreenSizeComponent;
+use Lpuygrenier\Lazykanban\Gui\Constant\Widgets;
 use Lpuygrenier\Lazykanban\Service\FileService;
 use Lpuygrenier\Lazykanban\Service\ConfigService;
 use Lpuygrenier\Lazykanban\Service\KeybindService;
@@ -137,7 +139,13 @@ class Engine {
             }
 
             /** Render the app */
-            $this->display->draw($this->buildLayout($this->currentIGuiComponent));
+            try {
+                $this->display->draw($this->buildLayout($this->currentIGuiComponent));
+            } catch (Throwable $err) {
+                $errorComponent = new TooSmallScreenSizeComponent();
+                $this->display->draw($errorComponent->build());
+            }
+
 
             // sleep for Xms - note that it's encouraged to implement apps
             // using an async library such as Amp or React
