@@ -142,6 +142,7 @@ class Engine {
             try {
                 $this->display->draw($this->buildLayout($this->currentIGuiComponent));
             } catch (Throwable $err) {
+                $this->logger->error($err);
                 $errorComponent = new TooSmallScreenSizeComponent();
                 $this->display->draw($errorComponent->build());
             }
@@ -207,6 +208,7 @@ class Engine {
     }
 
     private function buildLayout(IGuiComponent $IGuiComponent): Widget {
+        $this->statusBar->setKeybinds($this->currentIGuiComponent->getKeybindActions());
         return GridWidget::default()
             ->direction(Direction::Vertical)
             ->constraints(

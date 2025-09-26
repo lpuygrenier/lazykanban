@@ -27,7 +27,7 @@ use PhpTui\Tui\Widget\Borders;
 use PhpTui\Tui\Widget\BorderType;
 use PhpTui\Tui\Widget\Widget;
 
-final class BoardSectionComponent extends TableComponent implements IInteractive, IKeybindProvider, IFilterable
+final class BoardSectionComponent extends TableComponent implements IGuiComponent
 {
     private array $boardFiles;
     private mixed $filter = null;
