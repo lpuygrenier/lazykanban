@@ -276,7 +276,7 @@ final class KanbanPage implements IGuiComponent
         $this->boardSectionComponent->setActive($this->activeComponent === 'boardsection');
 
 
-        $taskDescription = new TaskDescription($this->getCurrentTask()->getDescription() ?? '');
+        $taskDescription = new TaskDescription($this->getCurrentTask()?->getDescription() ?? '');
 
         $sideContent = GridWidget::default()
             ->direction(Direction::Vertical)
